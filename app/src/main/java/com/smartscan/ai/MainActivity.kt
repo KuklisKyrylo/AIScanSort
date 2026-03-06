@@ -12,6 +12,7 @@ import androidx.navigation.NavType
 import com.smartscan.ai.ui.detail.ImageDetailScreenRoute
 import com.smartscan.ai.ui.main.MainScreenRoute
 import com.smartscan.ai.ui.navigation.Screen
+import com.smartscan.ai.ui.paywall.PaywallScreenRoute
 import com.smartscan.ai.ui.settings.SettingsScreenRoute
 import com.smartscan.ai.ui.theme.SmartScanTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,6 +35,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToSettings = {
                                     navController.navigate(Screen.Settings.route)
                                 },
+                                onNavigateToPaywall = {
+                                    navController.navigate(Screen.Paywall.route)
+                                },
                                 onImageClick = { imageId ->
                                     navController.navigate(Screen.ImageDetail.createRoute(imageId))
                                 }
@@ -42,6 +46,14 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.Settings.route) {
                             SettingsScreenRoute(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable(Screen.Paywall.route) {
+                            PaywallScreenRoute(
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

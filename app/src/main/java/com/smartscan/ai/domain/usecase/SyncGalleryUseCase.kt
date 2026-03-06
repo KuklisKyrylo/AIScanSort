@@ -3,6 +3,7 @@ package com.smartscan.ai.domain.usecase
 import android.util.Log
 import com.smartscan.ai.data.analyzer.MLKitAnalyzer
 import com.smartscan.ai.data.media.MediaStoreImageSource
+import com.smartscan.ai.data.preferences.PreferencesManager
 import com.smartscan.ai.domain.billing.PaywallGate
 import com.smartscan.ai.domain.model.ScanStatus
 import com.smartscan.ai.domain.model.ScannedImage
@@ -14,7 +15,8 @@ class SyncGalleryUseCase @Inject constructor(
     private val mediaStoreImageSource: MediaStoreImageSource,
     private val mlKitAnalyzer: MLKitAnalyzer,
     private val scanRepository: ScanRepository,
-    private val billingRepository: BillingRepository
+    private val billingRepository: BillingRepository,
+    private val preferencesManager: PreferencesManager
 ) {
 
     suspend operator fun invoke(limit: Int = 80): SyncGalleryResult {
@@ -68,6 +70,7 @@ class SyncGalleryUseCase @Inject constructor(
             )
 
             scanRepository.upsertScannedImage(scannedImage)
+            preferencesManager.addScanCount() // Track scan for trial period
             scannedCount++
             inserted++
             Log.d("SyncGalleryUseCase", "Successfully inserted image, total inserted=$inserted")

@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import com.smartscan.ai.domain.model.ScannedImage
 @Composable
 fun MainScreenRoute(
     onNavigateToSettings: () -> Unit,
+    onNavigateToPaywall: () -> Unit,
     onImageClick: (Long) -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
@@ -79,7 +81,9 @@ fun MainScreenRoute(
             }
         },
         onNavigateToSettings = onNavigateToSettings,
-        onImageClick = onImageClick
+        onNavigateToPaywall = onNavigateToPaywall,
+        onImageClick = onImageClick,
+        onToggleEmptyScansFilter = viewModel::toggleEmptyScansFilter
     )
 }
 
@@ -91,7 +95,9 @@ fun MainScreen(
     onSyncNow: () -> Unit,
     onBuyProClick: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onImageClick: (Long) -> Unit
+    onNavigateToPaywall: () -> Unit,
+    onImageClick: (Long) -> Unit,
+    onToggleEmptyScansFilter: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         SearchTopBar(
@@ -100,8 +106,20 @@ fun MainScreen(
             onSyncNow = onSyncNow,
             onNavigateToSettings = onNavigateToSettings,
             isSyncing = state.isSyncing,
-            strings = state.strings
+            strings = state.strings,
+            showEmptyScans = state.showEmptyScans,
+            onToggleEmptyScansFilter = onToggleEmptyScansFilter
         )
+
+        // Show trial banner if user is on free trial
+        if (!state.isPro && state.trialScansUsed < 30) {
+            TrialBanner(
+                scansUsed = state.trialScansUsed,
+                scansRemaining = state.trialScansRemaining,
+                onUpgradeClick = onNavigateToPaywall,
+                strings = state.strings
+            )
+        }
 
         if (!state.hasMediaPermission) {
             PermissionRequiredBanner(
@@ -113,7 +131,7 @@ fun MainScreen(
         if (state.showPaywall) {
             PaywallBanner(
                 scannedCount = state.scannedCount,
-                onBuyProClick = onBuyProClick,
+                onBuyProClick = onNavigateToPaywall,
                 strings = state.strings
             )
         }
@@ -141,7 +159,9 @@ private fun SearchTopBar(
     onSyncNow: () -> Unit,
     onNavigateToSettings: () -> Unit,
     isSyncing: Boolean,
-    strings: com.smartscan.ai.ui.strings.StringResources
+    strings: com.smartscan.ai.ui.strings.StringResources,
+    showEmptyScans: Boolean,
+    onToggleEmptyScansFilter: () -> Unit
 ) {
     Column {
         Row(
@@ -156,7 +176,17 @@ private fun SearchTopBar(
                 onValueChange = onQueryChange,
                 modifier = Modifier.weight(1f),
                 singleLine = true,
-                label = { Text(strings.searchHint) }
+                label = { Text(strings.searchHint) },
+                trailingIcon = {
+                    if (query.isNotBlank()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear"
+                            )
+                        }
+                    }
+                }
             )
             IconButton(onClick = onNavigateToSettings) {
                 Icon(
@@ -173,6 +203,12 @@ private fun SearchTopBar(
         ) {
             TextButton(onClick = onSyncNow, enabled = !isSyncing) {
                 Text(if (isSyncing) strings.syncing else strings.syncNow)
+            }
+            TextButton(onClick = onToggleEmptyScansFilter) {
+                Text(
+                    text = if (showEmptyScans) strings.hideEmptyScans else strings.showEmptyScans,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

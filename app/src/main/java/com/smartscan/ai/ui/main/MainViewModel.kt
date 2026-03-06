@@ -6,6 +6,7 @@ import com.smartscan.ai.data.preferences.PreferencesManager
 import com.smartscan.ai.domain.billing.PaywallGate
 import com.smartscan.ai.domain.model.AppLanguage
 import com.smartscan.ai.domain.model.ScannedImage
+import com.smartscan.ai.domain.model.SubscriptionType
 import com.smartscan.ai.domain.repository.BillingRepository
 import com.smartscan.ai.domain.repository.ScanRepository
 import com.smartscan.ai.domain.usecase.SyncGalleryUseCase
@@ -35,6 +36,7 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     private val searchQuery = MutableStateFlow("")
+    private val showEmptyScansFlow = MutableStateFlow(false)
 
     // Initialize with current language from preferences
     private val initialLanguage = try {
@@ -89,18 +91,42 @@ class MainViewModel @Inject constructor(
         billingRepository.launchProPurchase(activity)
     }
 
+    fun toggleEmptyScansFilter() {
+        val newValue = !showEmptyScansFlow.value
+        showEmptyScansFlow.value = newValue
+        _uiState.update { it.copy(showEmptyScans = newValue) }
+    }
+
     private fun observeImages() {
         viewModelScope.launch {
-            searchQuery
-                .flatMapLatest { query -> scanRepository.observeScannedImages(query) }
-                .collect { images ->
-                    _uiState.update {
-                        it.copy(
-                            searchQuery = searchQuery.value,
-                            images = images
-                        )
+            combine(
+                searchQuery,
+                showEmptyScansFlow,
+                scanRepository.observeScannedImages("")
+            ) { query, showEmpty, allImages ->
+                val searchFiltered = if (query.isBlank()) {
+                    allImages
+                } else {
+                    allImages.filter {
+                        it.extractedText.contains(query, ignoreCase = true) ||
+                        it.tags.any { tag -> tag.contains(query, ignoreCase = true) }
                     }
                 }
+                val finalFiltered = if (showEmpty) {
+                    searchFiltered
+                } else {
+                    searchFiltered.filter { it.extractedText.isNotBlank() }
+                }
+                Triple(query, finalFiltered, showEmpty)
+            }.collect { (query, filteredImages, showEmpty) ->
+                _uiState.update {
+                    it.copy(
+                        searchQuery = query,
+                        images = filteredImages,
+                        showEmptyScans = showEmpty
+                    )
+                }
+            }
         }
     }
 
@@ -108,14 +134,19 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 billingRepository.observeIsPro(),
-                scanRepository.observeScannedCount()
-            ) { isPro, scannedCount ->
-                Triple(isPro, scannedCount, PaywallGate.shouldShowPaywall(isPro, scannedCount))
-            }.collect { (isPro, scannedCount, showPaywall) ->
+                scanRepository.observeScannedCount(),
+                preferencesManager.subscriptionTypeFlow,
+                preferencesManager.scanCountFlow
+            ) { isPro, scannedCount, subscriptionType, trialScans ->
+                val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= 30
+                Quadruple(isPro, scannedCount, trialScans, showPaywall)
+            }.collect { (isPro, scannedCount, trialScans, showPaywall) ->
                 _uiState.update {
                     it.copy(
                         isPro = isPro,
                         scannedCount = scannedCount,
+                        trialScansUsed = trialScans,
+                        trialScansRemaining = (30 - trialScans).coerceAtLeast(0),
                         showPaywall = showPaywall
                     )
                 }
@@ -144,11 +175,22 @@ data class MainUiState(
     val searchQuery: String = "",
     val images: List<ScannedImage> = emptyList(),
     val scannedCount: Int = 0,
+    val trialScansUsed: Int = 0,
+    val trialScansRemaining: Int = 30,
     val isPro: Boolean = false,
     val showPaywall: Boolean = false,
     val hasMediaPermission: Boolean = false,
     val isSyncing: Boolean = false,
     val syncStatusMessage: String = "",
     val currentLanguage: AppLanguage = AppLanguage.ENGLISH,
-    val strings: StringResources = getStrings(AppLanguage.ENGLISH)
+    val strings: StringResources = getStrings(AppLanguage.ENGLISH),
+    val showEmptyScans: Boolean = false
+)
+
+// Small tuple helper to keep combine readable.
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
 )

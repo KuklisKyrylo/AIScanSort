@@ -4,7 +4,8 @@ enum class AppLanguage(val code: String, val displayName: String) {
     ENGLISH("en", "English"),
     RUSSIAN("ru", "Русский"),
     SPANISH("es", "Español"),
-    GERMAN("de", "Deutsch");
+    GERMAN("de", "Deutsch"),
+    CHINESE("zh", "中文");
 
     companion object {
         fun fromCode(code: String): AppLanguage {
@@ -12,4 +13,3 @@ enum class AppLanguage(val code: String, val displayName: String) {
         }
     }
 }
-
