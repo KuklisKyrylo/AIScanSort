@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.android.vending.BILLING" />
+
+    <!-- Android 13+ media permission for gallery screenshot scanning -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Backward compatibility for Android 12 and below -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <queries>
+        <!-- Required for resolving Google Play billing service -->
+        <intent>
+            <action android:name="com.android.vending.billing.InAppBillingService.BIND" />
+        </intent>
+
+        <!-- Package visibility for Play Store presence checks -->
+        <package android:name="com.android.vending" />
+
+        <!-- Optional visibility when launching image picker/document providers -->
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT" />
+            <category android:name="android.intent.category.OPENABLE" />
+            <data android:mimeType="image/*" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".SmartScanApplication"
+        android:allowBackup="true"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:label="SmartScan AI"
+        android:roundIcon="@android:drawable/ic_menu_gallery"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
