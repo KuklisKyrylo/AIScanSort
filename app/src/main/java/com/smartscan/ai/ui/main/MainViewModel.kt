@@ -35,6 +35,10 @@ class MainViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : BaseViewModel() {
 
+    companion object {
+        private const val FREE_TRIAL_SCAN_LIMIT = 300
+    }
+
     private val searchQuery = MutableStateFlow("")
     private val showEmptyScansFlow = MutableStateFlow(false)
 
@@ -109,7 +113,7 @@ class MainViewModel @Inject constructor(
                 } else {
                     allImages.filter {
                         it.extractedText.contains(query, ignoreCase = true) ||
-                        it.tags.any { tag -> tag.contains(query, ignoreCase = true) }
+                            it.tags.any { tag -> tag.contains(query, ignoreCase = true) }
                     }
                 }
                 val finalFiltered = if (showEmpty) {
@@ -138,7 +142,7 @@ class MainViewModel @Inject constructor(
                 preferencesManager.subscriptionTypeFlow,
                 preferencesManager.scanCountFlow
             ) { isPro, scannedCount, subscriptionType, trialScans ->
-                val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= 30
+                val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= FREE_TRIAL_SCAN_LIMIT
                 Quadruple(isPro, scannedCount, trialScans, showPaywall)
             }.collect { (isPro, scannedCount, trialScans, showPaywall) ->
                 _uiState.update {
@@ -146,7 +150,8 @@ class MainViewModel @Inject constructor(
                         isPro = isPro,
                         scannedCount = scannedCount,
                         trialScansUsed = trialScans,
-                        trialScansRemaining = (30 - trialScans).coerceAtLeast(0),
+                        trialScansRemaining = (FREE_TRIAL_SCAN_LIMIT - trialScans).coerceAtLeast(0),
+                        trialScansLimit = FREE_TRIAL_SCAN_LIMIT,
                         showPaywall = showPaywall
                     )
                 }
@@ -176,7 +181,8 @@ data class MainUiState(
     val images: List<ScannedImage> = emptyList(),
     val scannedCount: Int = 0,
     val trialScansUsed: Int = 0,
-    val trialScansRemaining: Int = 30,
+    val trialScansRemaining: Int = 300,
+    val trialScansLimit: Int = 300,
     val isPro: Boolean = false,
     val showPaywall: Boolean = false,
     val hasMediaPermission: Boolean = false,

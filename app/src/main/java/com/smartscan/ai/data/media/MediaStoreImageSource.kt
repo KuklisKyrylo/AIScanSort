@@ -2,6 +2,7 @@ package com.smartscan.ai.data.media
 
 import android.content.ContentUris
 import android.content.Context
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -64,5 +65,42 @@ class MediaStoreImageSource @Inject constructor(
             }
         }.getOrNull()
     }
-}
 
+    suspend fun loadPhotoCreatedAtEpochMillis(uriString: String): Long? = withContext(Dispatchers.IO) {
+        val uri = Uri.parse(uriString)
+        runCatching {
+            context.contentResolver.query(
+                uri,
+                arrayOf(
+                    MediaStore.Images.Media.DATE_TAKEN,
+                    MediaStore.Images.Media.DATE_ADDED
+                ),
+                null,
+                null,
+                null
+            )?.use { cursor: Cursor ->
+                if (!cursor.moveToFirst()) return@use null
+
+                val dateTakenIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)
+                val dateAddedIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATE_ADDED)
+
+                val dateTaken = if (dateTakenIndex >= 0 && !cursor.isNull(dateTakenIndex)) {
+                    cursor.getLong(dateTakenIndex)
+                } else {
+                    0L
+                }
+
+                if (dateTaken > 0L) {
+                    dateTaken
+                } else {
+                    val dateAddedSeconds = if (dateAddedIndex >= 0 && !cursor.isNull(dateAddedIndex)) {
+                        cursor.getLong(dateAddedIndex)
+                    } else {
+                        0L
+                    }
+                    if (dateAddedSeconds > 0L) dateAddedSeconds * 1000L else null
+                }
+            }
+        }.getOrNull()
+    }
+}

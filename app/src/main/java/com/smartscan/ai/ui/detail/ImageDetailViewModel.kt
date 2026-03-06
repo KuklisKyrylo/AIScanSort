@@ -61,11 +61,13 @@ class ImageDetailViewModel @Inject constructor(
             scanRepository.observeScannedImages("").collect { images ->
                 val image = images.find { it.id == imageId }
                 val bitmap = image?.let { mediaStoreImageSource.loadBitmap(it.uri) }
+                val photoCreatedAt = image?.let { mediaStoreImageSource.loadPhotoCreatedAtEpochMillis(it.uri) }
 
                 _uiState.update {
                     it.copy(
                         image = image,
                         bitmap = bitmap,
+                        photoCreatedAtEpochMillis = photoCreatedAt,
                         isLoading = false
                     )
                 }
@@ -88,9 +90,8 @@ class ImageDetailViewModel @Inject constructor(
 data class ImageDetailUiState(
     val image: ScannedImage? = null,
     val bitmap: Bitmap? = null,
+    val photoCreatedAtEpochMillis: Long? = null,
     val isLoading: Boolean = false,
     val currentLanguage: AppLanguage = AppLanguage.ENGLISH,
     val strings: StringResources = getStrings(AppLanguage.ENGLISH)
 )
-
-

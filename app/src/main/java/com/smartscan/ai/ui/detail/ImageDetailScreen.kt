@@ -171,7 +171,7 @@ fun ImageDetailScreen(
                     // Metadata
                     DetailSection(
                         title = state.strings.metadata,
-                        content = buildMetadataText(state.image, state.strings)
+                        content = buildMetadataText(state.image, state.strings, state.photoCreatedAtEpochMillis)
                     )
                 }
             }
@@ -225,14 +225,15 @@ private fun DetailSection(title: String, content: String) {
     }
 }
 
-private fun buildMetadataText(image: com.smartscan.ai.domain.model.ScannedImage, strings: com.smartscan.ai.ui.strings.StringResources): String {
+private fun buildMetadataText(image: com.smartscan.ai.domain.model.ScannedImage, strings: com.smartscan.ai.ui.strings.StringResources, photoCreatedAt: Long?): String {
     val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
     val scannedDate = dateFormat.format(Date(image.scannedAtEpochMillis))
 
     return buildString {
-        append("${strings.status}: ${image.status.name}\n")
-        append("${strings.scannedAt}: $scannedDate\n")
-        append("${strings.uri}: ${image.uri}")
+        if (photoCreatedAt != null) {
+            val createdDate = dateFormat.format(Date(photoCreatedAt))
+            append("${strings.photoCreatedAt}: $createdDate\n")
+        }
+        append("${strings.scannedAt}: $scannedDate")
     }
 }
-

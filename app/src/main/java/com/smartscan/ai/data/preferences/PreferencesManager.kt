@@ -1,6 +1,8 @@
 package com.smartscan.ai.data.preferences
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -8,6 +10,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.smartscan.ai.domain.model.AppLanguage
 import com.smartscan.ai.domain.model.SubscriptionType
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,13 +34,37 @@ class PreferencesManager @Inject constructor(
         val TRIAL_START_DATE = longPreferencesKey("trial_start_date")
     }
 
+    private val deviceId: String by lazy {
+        Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
+    }
+
+    private val securePrefs: SharedPreferences by lazy {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        EncryptedSharedPreferences.create(
+            context,
+            "secure_scan_tracker",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
+    private fun getSecureKey(key: String): String {
+        return "$key-$deviceId"
+    }
+
     val languageFlow: Flow<AppLanguage> = context.dataStore.data.map { preferences ->
         val code = preferences[Keys.LANGUAGE] ?: AppLanguage.ENGLISH.code
         AppLanguage.fromCode(code)
     }
 
     val scanCountFlow: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[Keys.SCAN_COUNT] ?: 0
+        val datastoreCount = preferences[Keys.SCAN_COUNT] ?: 0
+        val secureCount = securePrefs.getInt(getSecureKey("scan_count"), 0)
+        maxOf(datastoreCount, secureCount)
     }
 
     val subscriptionTypeFlow: Flow<SubscriptionType> = context.dataStore.data.map { preferences ->
@@ -61,7 +89,10 @@ class PreferencesManager @Inject constructor(
     suspend fun addScanCount() {
         context.dataStore.edit { preferences ->
             val current = preferences[Keys.SCAN_COUNT] ?: 0
-            preferences[Keys.SCAN_COUNT] = current + 1
+            val newCount = current + 1
+            preferences[Keys.SCAN_COUNT] = newCount
+
+            securePrefs.edit().putInt(getSecureKey("scan_count"), newCount).apply()
         }
     }
 
@@ -97,5 +128,8 @@ class PreferencesManager @Inject constructor(
             preferences.remove(Keys.SUBSCRIPTION_EXPIRY)
         }
     }
-}
 
+    fun getLifetimeScanCount(): Int {
+        return securePrefs.getInt(getSecureKey("scan_count"), 0)
+    }
+}

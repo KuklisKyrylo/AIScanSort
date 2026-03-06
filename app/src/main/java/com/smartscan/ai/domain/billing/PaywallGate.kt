@@ -1,10 +1,9 @@
 package com.smartscan.ai.domain.billing
 
-private const val FREE_SCAN_LIMIT = 50
+private const val FREE_SCAN_LIMIT = 300
 
 object PaywallGate {
     fun shouldShowPaywall(isPro: Boolean, scannedCount: Int): Boolean {
         return !isPro && scannedCount > FREE_SCAN_LIMIT
     }
 }
-

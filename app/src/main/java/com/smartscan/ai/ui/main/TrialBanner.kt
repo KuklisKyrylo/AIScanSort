@@ -21,10 +21,11 @@ import com.smartscan.ai.ui.strings.StringResources
 fun TrialBanner(
     scansUsed: Int,
     scansRemaining: Int,
+    scansLimit: Int,
     onUpgradeClick: () -> Unit,
     strings: StringResources
 ) {
-    val progress = scansUsed.toFloat() / 30f
+    val progress = if (scansLimit > 0) scansUsed.toFloat() / scansLimit.toFloat() else 0f
 
     Column(
         modifier = Modifier
@@ -40,7 +41,7 @@ fun TrialBanner(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = strings.trialUsage.format(scansUsed),
+                    text = strings.trialUsage.format(scansUsed, scansLimit),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )

@@ -89,8 +89,15 @@ dependencies {
     implementation("androidx.room:room-paging:2.7.0")
     ksp("androidx.room:room-compiler:2.7.0")
 
+    // ML Kit Text Recognition V2 - supports all scripts including Cyrillic
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+
+    // Tesseract OCR for better Cyrillic/multilingual support
+    implementation("com.rmtheis:tess-two:9.1.0")
+
     implementation("com.google.mlkit:entity-extraction:16.0.0-beta5")
+    implementation("com.google.mlkit:language-id:17.0.0")
 
     implementation("com.google.dagger:hilt-android:2.56")
     ksp("com.google.dagger:hilt-compiler:2.56")
@@ -99,6 +106,9 @@ dependencies {
     implementation("com.android.billingclient:billing-ktx:6.2.1")
 
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Security
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

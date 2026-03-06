@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="robotGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGradient)"/>
+
+  <!-- Robot head shadow -->
+  <ellipse cx="256" cy="340" rx="140" ry="20" fill="#000000" opacity="0.15"/>
+
+  <!-- Robot head body -->
+  <rect x="136" y="180" width="240" height="200" rx="40" fill="url(#robotGradient)" stroke="#4f46e5" stroke-width="6"/>
+
+  <!-- Antenna base -->
+  <rect x="246" y="140" width="20" height="50" rx="10" fill="url(#robotGradient)" stroke="#4f46e5" stroke-width="3"/>
+  <circle cx="256" cy="130" r="18" fill="#60a5fa" stroke="#4f46e5" stroke-width="3"/>
+  <circle cx="256" cy="130" r="8" fill="#ffffff" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Left eye -->
+  <circle cx="200" cy="240" r="35" fill="#4f46e5"/>
+  <circle cx="200" cy="240" r="25" fill="url(#glowGradient)">
+    <animate attributeName="r" values="25;28;25" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="206" cy="234" r="10" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Right eye -->
+  <circle cx="312" cy="240" r="35" fill="#4f46e5"/>
+  <circle cx="312" cy="240" r="25" fill="url(#glowGradient)">
+    <animate attributeName="r" values="25;28;25" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="318" cy="234" r="10" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Smile/mouth line -->
+  <path d="M 200 310 Q 256 340 312 310" stroke="#4f46e5" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- AI Text -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#ffffff" text-anchor="middle" stroke="#4f46e5" stroke-width="4">AI</text>
+
+  <!-- Scan lines effect -->
+  <line x1="136" y1="200" x2="376" y2="200" stroke="#60a5fa" stroke-width="2" opacity="0.3">
+    <animate attributeName="y1" values="200;360;200" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="y2" values="200;360;200" dur="4s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Decorative circuit pattern -->
+  <circle cx="420" cy="100" r="30" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.4"/>
+  <line x1="420" y1="70" x2="420" y2="50" stroke="#ffffff" stroke-width="3" opacity="0.4"/>
+  <line x1="390" y1="100" x2="370" y2="100" stroke="#ffffff" stroke-width="3" opacity="0.4"/>
+
+  <circle cx="92" cy="420" r="25" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.4"/>
+  <line x1="92" y1="395" x2="92" y2="380" stroke="#ffffff" stroke-width="3" opacity="0.4"/>
+</svg>
+

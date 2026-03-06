@@ -95,3 +95,6 @@ lint-report.html
 # Room schemas (exclude from version control if needed)
 # */schemas/
 
+# Local helper scripts (do not commit)
+*.py
+*.ps1

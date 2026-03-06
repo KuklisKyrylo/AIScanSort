@@ -112,10 +112,11 @@ fun MainScreen(
         )
 
         // Show trial banner if user is on free trial
-        if (!state.isPro && state.trialScansUsed < 30) {
+        if (!state.isPro && state.trialScansUsed < state.trialScansLimit) {
             TrialBanner(
                 scansUsed = state.trialScansUsed,
                 scansRemaining = state.trialScansRemaining,
+                scansLimit = state.trialScansLimit,
                 onUpgradeClick = onNavigateToPaywall,
                 strings = state.strings
             )
@@ -293,12 +294,6 @@ private fun GalleryTile(image: ScannedImage, noTextMessage: String, onClick: () 
             .clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
-            Text(
-                text = image.uri,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
             Text(
                 text = image.extractedText.ifBlank { noTextMessage },
                 style = MaterialTheme.typography.bodySmall,
