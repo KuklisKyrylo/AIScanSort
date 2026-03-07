@@ -29,6 +29,9 @@ interface ScanDao {
     @Query("DELETE FROM scans WHERE id = :scanId")
     suspend fun deleteById(scanId: Long)
 
+    @Query("DELETE FROM scans")
+    suspend fun deleteAll()
+
     @Query("SELECT COUNT(id) FROM scans")
     fun observeScannedCount(): Flow<Int>
 

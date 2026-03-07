@@ -10,6 +10,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -20,11 +21,15 @@ class MediaStoreImageSource @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    suspend fun loadLatestImageUris(limit: Int): List<String> = withContext(Dispatchers.IO) {
-        val uris = mutableListOf<String>()
+    suspend fun loadLatestImageUris(limit: Int, screenshotsOnly: Boolean = true): List<String> = withContext(Dispatchers.IO) {
+        val rows = mutableListOf<Pair<String, Boolean>>()
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        val projection = arrayOf(MediaStore.Images.Media._ID)
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media.RELATIVE_PATH
+        )
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC, ${MediaStore.Images.Media._ID} DESC"
 
         try {
             context.contentResolver.query(
@@ -35,12 +40,16 @@ class MediaStoreImageSource @Inject constructor(
                 sortOrder
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                Log.d("MediaStoreImageSource", "Cursor count: ${cursor.count}")
-                while (cursor.moveToNext() && uris.size < limit) {
+                val bucketColumn = cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+                val pathColumn = cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH)
+
+                while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
-                    val uri = ContentUris.withAppendedId(collection, id)
-                    uris += uri.toString()
-                    Log.d("MediaStoreImageSource", "Found image: $uri")
+                    val uri = ContentUris.withAppendedId(collection, id).toString()
+                    val bucket = if (bucketColumn >= 0 && !cursor.isNull(bucketColumn)) cursor.getString(bucketColumn) else ""
+                    val relativePath = if (pathColumn >= 0 && !cursor.isNull(pathColumn)) cursor.getString(pathColumn) else ""
+                    val isScreenshot = isScreenshotBucket(bucket, relativePath)
+                    rows += uri to isScreenshot
                 }
             } ?: run {
                 Log.w("MediaStoreImageSource", "Query returned null")
@@ -49,8 +58,20 @@ class MediaStoreImageSource @Inject constructor(
             Log.e("MediaStoreImageSource", "Error loading images: ${e.message}", e)
         }
 
-        Log.d("MediaStoreImageSource", "Total images found: ${uris.size}")
-        uris
+        // Keep recency order, but optionally prioritize or restrict to screenshots.
+        val screenshots = rows.asSequence().filter { it.second }.map { it.first }
+        val others = rows.asSequence().filterNot { it.second }.map { it.first }
+        val ordered = if (screenshotsOnly) screenshots else (screenshots + others)
+        val result = ordered.take(limit).toList()
+
+        Log.d("MediaStoreImageSource", "Total images selected: ${result.size}")
+        result
+    }
+
+    private fun isScreenshotBucket(bucket: String, relativePath: String): Boolean {
+        val b = bucket.lowercase(Locale.US)
+        val p = relativePath.lowercase(Locale.US)
+        return b.contains("screenshot") || b.contains("скрин") || p.contains("screenshot")
     }
 
     suspend fun loadBitmap(uriString: String): Bitmap? = withContext(Dispatchers.IO) {

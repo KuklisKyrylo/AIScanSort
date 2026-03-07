@@ -1,11 +1,15 @@
 package com.smartscan.ai.domain.repository
 
 import android.app.Activity
+import com.smartscan.ai.domain.model.SubscriptionType
 import kotlinx.coroutines.flow.Flow
 
 interface BillingRepository {
-    fun observeIsPro(): Flow<Boolean>
-    fun currentIsPro(): Boolean
+    fun observeIsPremium(): Flow<Boolean>
+    fun observeSubscriptionType(): Flow<SubscriptionType>
+    fun currentIsPremium(): Boolean
+    fun currentSubscriptionType(): SubscriptionType
     fun refreshPurchases()
-    fun launchProPurchase(activity: Activity): Boolean
+    fun launchMonthlyPurchase(activity: Activity): Boolean
+    fun launchLifetimePurchase(activity: Activity): Boolean
 }

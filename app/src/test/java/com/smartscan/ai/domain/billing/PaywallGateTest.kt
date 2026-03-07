@@ -7,17 +7,22 @@ import org.junit.Test
 class PaywallGateTest {
 
     @Test
-    fun `shows paywall when user is not pro and scans exceed limit`() {
-        assertTrue(PaywallGate.shouldShowPaywall(isPro = false, scannedCount = 301))
+    fun `shows paywall when user is not premium and scans exceed limit`() {
+        assertTrue(PaywallGate.shouldShowPaywall(isPremium = false, scannedCount = 301))
     }
 
     @Test
-    fun `does not show paywall at free limit`() {
-        assertFalse(PaywallGate.shouldShowPaywall(isPro = false, scannedCount = 300))
+    fun `shows paywall at free limit`() {
+        assertTrue(PaywallGate.shouldShowPaywall(isPremium = false, scannedCount = 300))
     }
 
     @Test
-    fun `does not show paywall for pro users`() {
-        assertFalse(PaywallGate.shouldShowPaywall(isPro = true, scannedCount = 1000))
+    fun `does not show paywall below limit`() {
+        assertFalse(PaywallGate.shouldShowPaywall(isPremium = false, scannedCount = 299))
+    }
+
+    @Test
+    fun `does not show paywall for premium users`() {
+        assertFalse(PaywallGate.shouldShowPaywall(isPremium = true, scannedCount = 1000))
     }
 }

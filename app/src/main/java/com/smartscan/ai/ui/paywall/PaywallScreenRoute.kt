@@ -1,7 +1,11 @@
 package com.smartscan.ai.ui.paywall
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smartscan.ai.ui.main.MainViewModel
@@ -12,16 +16,28 @@ fun PaywallScreenRoute(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val activity = LocalContext.current.findActivity()
 
     PaywallScreen(
         strings = state.strings,
         onNavigateBack = onNavigateBack,
         onMonthlyClick = {
-            // TODO: Implement Google Play Billing for Monthly
+            if (activity != null) {
+                viewModel.onMonthlyPlanClick(activity)
+            }
         },
         onLifetimeClick = {
-            // TODO: Implement Google Play Billing for Lifetime
+            if (activity != null) {
+                viewModel.onLifetimePlanClick(activity)
+            }
         }
     )
 }
 
+private fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+}

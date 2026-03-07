@@ -8,7 +8,9 @@ import com.smartscan.ai.domain.model.AppLanguage
 import com.smartscan.ai.domain.model.ScannedImage
 import com.smartscan.ai.domain.model.SubscriptionType
 import com.smartscan.ai.domain.repository.BillingRepository
+import com.smartscan.ai.domain.repository.ScanQuotaRepository
 import com.smartscan.ai.domain.repository.ScanRepository
+import com.smartscan.ai.domain.usecase.SyncGalleryResult
 import com.smartscan.ai.domain.usecase.SyncGalleryUseCase
 import com.smartscan.ai.ui.base.BaseViewModel
 import com.smartscan.ai.ui.strings.StringResources
@@ -32,7 +34,8 @@ class MainViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val billingRepository: BillingRepository,
     private val syncGalleryUseCase: SyncGalleryUseCase,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val scanQuotaRepository: ScanQuotaRepository
 ) : BaseViewModel() {
 
     companion object {
@@ -57,6 +60,11 @@ class MainViewModel @Inject constructor(
 
     init {
         billingRepository.refreshPurchases()
+        viewModelScope.launch {
+            scanQuotaRepository.refreshFromServer()
+            val serverCount = scanQuotaRepository.getUsedScans()
+            preferencesManager.ensureScanCountAtLeast(serverCount)
+        }
         // Listen for language changes
         viewModelScope.launch {
             preferencesManager.languageFlow.collect { language ->
@@ -86,19 +94,35 @@ class MainViewModel @Inject constructor(
     }
 
     fun onSyncNowClick() {
-        if (_uiState.value.hasMediaPermission) {
+        if (_uiState.value.hasMediaPermission && _uiState.value.isSyncAllowed) {
             syncGallery()
         }
     }
 
-    fun onBuyProClick(activity: Activity) {
-        billingRepository.launchProPurchase(activity)
+    fun onMonthlyPlanClick(activity: Activity) {
+        billingRepository.launchMonthlyPurchase(activity)
+    }
+
+    fun onLifetimePlanClick(activity: Activity) {
+        billingRepository.launchLifetimePurchase(activity)
+    }
+
+    fun onBuyPremiumClick(activity: Activity) {
+        billingRepository.launchLifetimePurchase(activity)
     }
 
     fun toggleEmptyScansFilter() {
         val newValue = !showEmptyScansFlow.value
         showEmptyScansFlow.value = newValue
         _uiState.update { it.copy(showEmptyScans = newValue) }
+    }
+
+    fun onClearAllScansConfirmed() {
+        viewModelScope.launch {
+            scanRepository.deleteAllScannedImages()
+            val strings = _uiState.value.strings
+            _uiState.update { it.copy(syncStatusMessage = buildClearAllStatusMessage(strings)) }
+        }
     }
 
     private fun observeImages() {
@@ -137,22 +161,24 @@ class MainViewModel @Inject constructor(
     private fun observePaywallState() {
         viewModelScope.launch {
             combine(
-                billingRepository.observeIsPro(),
+                billingRepository.observeIsPremium(),
                 scanRepository.observeScannedCount(),
-                preferencesManager.subscriptionTypeFlow,
+                billingRepository.observeSubscriptionType(),
                 preferencesManager.scanCountFlow
-            ) { isPro, scannedCount, subscriptionType, trialScans ->
+            ) { isPremium, scannedCount, subscriptionType, trialScans ->
                 val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= FREE_TRIAL_SCAN_LIMIT
-                Quadruple(isPro, scannedCount, trialScans, showPaywall)
-            }.collect { (isPro, scannedCount, trialScans, showPaywall) ->
+                val isSyncAllowed = !showPaywall
+                Quintuple(isPremium, scannedCount, trialScans, showPaywall, isSyncAllowed)
+            }.collect { (isPremium, scannedCount, trialScans, showPaywall, isSyncAllowed) ->
                 _uiState.update {
                     it.copy(
-                        isPro = isPro,
+                        isPremium = isPremium,
                         scannedCount = scannedCount,
                         trialScansUsed = trialScans,
                         trialScansRemaining = (FREE_TRIAL_SCAN_LIMIT - trialScans).coerceAtLeast(0),
                         trialScansLimit = FREE_TRIAL_SCAN_LIMIT,
-                        showPaywall = showPaywall
+                        showPaywall = showPaywall,
+                        isSyncAllowed = isSyncAllowed
                     )
                 }
             }
@@ -166,14 +192,22 @@ class MainViewModel @Inject constructor(
             val strings = _uiState.value.strings
             _uiState.update { it.copy(isSyncing = true, syncStatusMessage = strings.syncingGallery) }
             val result = syncGalleryUseCase()
-            val message = if (result.paywallReached) {
-                strings.freeLimitReached.format(result.inserted, result.skipped)
-            } else {
-                strings.syncComplete.format(result.inserted, result.skipped)
-            }
+            val message = buildSyncStatusMessage(strings, result)
             _uiState.update { it.copy(isSyncing = false, syncStatusMessage = message) }
         }
     }
+}
+
+internal fun buildSyncStatusMessage(strings: StringResources, result: SyncGalleryResult): String {
+    return when {
+        result.screenshotsFolderEmpty -> strings.screenshotsFolderEmpty
+        result.paywallReached -> strings.freeLimitReached.format(result.inserted, result.skipped)
+        else -> strings.syncComplete.format(result.inserted, result.skipped)
+    }
+}
+
+internal fun buildClearAllStatusMessage(strings: StringResources): String {
+    return strings.clearAllScansSuccess
 }
 
 data class MainUiState(
@@ -183,20 +217,22 @@ data class MainUiState(
     val trialScansUsed: Int = 0,
     val trialScansRemaining: Int = 300,
     val trialScansLimit: Int = 300,
-    val isPro: Boolean = false,
+    val isPremium: Boolean = false,
     val showPaywall: Boolean = false,
     val hasMediaPermission: Boolean = false,
     val isSyncing: Boolean = false,
     val syncStatusMessage: String = "",
     val currentLanguage: AppLanguage = AppLanguage.ENGLISH,
     val strings: StringResources = getStrings(AppLanguage.ENGLISH),
-    val showEmptyScans: Boolean = false
+    val showEmptyScans: Boolean = false,
+    val isSyncAllowed: Boolean = true
 )
 
 // Small tuple helper to keep combine readable.
-private data class Quadruple<A, B, C, D>(
+private data class Quintuple<A, B, C, D, E>(
     val first: A,
     val second: B,
     val third: C,
-    val fourth: D
+    val fourth: D,
+    val fifth: E
 )

@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -16,6 +17,7 @@ import com.smartscan.ai.domain.model.AppLanguage
 import com.smartscan.ai.domain.model.SubscriptionType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +34,7 @@ class PreferencesManager @Inject constructor(
         val SUBSCRIPTION_TYPE = stringPreferencesKey("subscription_type")
         val SUBSCRIPTION_EXPIRY = longPreferencesKey("subscription_expiry")
         val TRIAL_START_DATE = longPreferencesKey("trial_start_date")
+        val SYNC_SCREENSHOTS_ONLY = booleanPreferencesKey("sync_screenshots_only")
     }
 
     private val deviceId: String by lazy {
@@ -80,6 +83,10 @@ class PreferencesManager @Inject constructor(
         preferences[Keys.TRIAL_START_DATE] ?: System.currentTimeMillis()
     }
 
+    val syncScreenshotsOnlyFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[Keys.SYNC_SCREENSHOTS_ONLY] ?: true
+    }
+
     suspend fun setLanguage(language: AppLanguage) {
         context.dataStore.edit { preferences ->
             preferences[Keys.LANGUAGE] = language.code
@@ -99,6 +106,18 @@ class PreferencesManager @Inject constructor(
     suspend fun setScanCount(count: Int) {
         context.dataStore.edit { preferences ->
             preferences[Keys.SCAN_COUNT] = count
+        }
+        securePrefs.edit().putInt(getSecureKey("scan_count"), count).apply()
+    }
+
+    suspend fun getScanCountNow(): Int {
+        return scanCountFlow.first()
+    }
+
+    suspend fun ensureScanCountAtLeast(count: Int) {
+        val current = getScanCountNow()
+        if (count > current) {
+            setScanCount(count)
         }
     }
 
@@ -126,6 +145,12 @@ class PreferencesManager @Inject constructor(
             preferences[Keys.SCAN_COUNT] = 0
             preferences[Keys.SUBSCRIPTION_TYPE] = SubscriptionType.FREE.name
             preferences.remove(Keys.SUBSCRIPTION_EXPIRY)
+        }
+    }
+
+    suspend fun setSyncScreenshotsOnly(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SYNC_SCREENSHOTS_ONLY] = enabled
         }
     }
 

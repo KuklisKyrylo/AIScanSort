@@ -15,4 +15,6 @@ interface ScanRepository {
     suspend fun upsertScannedImage(scannedImage: ScannedImage): Long
 
     suspend fun deleteScannedImage(imageId: Long)
+
+    suspend fun deleteAllScannedImages()
 }

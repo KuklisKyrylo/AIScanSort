@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +34,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -75,9 +79,10 @@ fun MainScreenRoute(
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onRequestPermission = { permissionLauncher.launch(mediaPermission) },
         onSyncNow = viewModel::onSyncNowClick,
-        onBuyProClick = {
+        onClearAllScans = viewModel::onClearAllScansConfirmed,
+        onBuyPremiumClick = {
             if (activity != null) {
-                viewModel.onBuyProClick(activity)
+                viewModel.onBuyPremiumClick(activity)
             }
         },
         onNavigateToSettings = onNavigateToSettings,
@@ -93,12 +98,36 @@ fun MainScreen(
     onSearchQueryChange: (String) -> Unit,
     onRequestPermission: () -> Unit,
     onSyncNow: () -> Unit,
-    onBuyProClick: () -> Unit,
+    onClearAllScans: () -> Unit,
+    onBuyPremiumClick: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToPaywall: () -> Unit,
     onImageClick: (Long) -> Unit,
     onToggleEmptyScansFilter: () -> Unit
 ) {
+    var showClearAllDialog by remember { mutableStateOf(false) }
+
+    if (showClearAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearAllDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearAllDialog = false
+                    onClearAllScans()
+                }) {
+                    Text(state.strings.clearAllScans)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearAllDialog = false }) {
+                    Text(state.strings.cancel)
+                }
+            },
+            title = { Text(state.strings.clearAllScansTitle) },
+            text = { Text(state.strings.clearAllScansMessage) }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         SearchTopBar(
             query = state.searchQuery,
@@ -108,19 +137,22 @@ fun MainScreen(
             isSyncing = state.isSyncing,
             strings = state.strings,
             showEmptyScans = state.showEmptyScans,
-            onToggleEmptyScansFilter = onToggleEmptyScansFilter
+            onToggleEmptyScansFilter = onToggleEmptyScansFilter,
+            onClearAllScansClick = { showClearAllDialog = true },
+            clearAllScansCount = state.scannedCount,
+            canClearAllScans = state.scannedCount > 0,
+            isSyncEnabled = state.isSyncAllowed
         )
 
-        // Show trial banner if user is on free trial
-        if (!state.isPro && state.trialScansUsed < state.trialScansLimit) {
-            TrialBanner(
-                scansUsed = state.trialScansUsed,
-                scansRemaining = state.trialScansRemaining,
-                scansLimit = state.trialScansLimit,
-                onUpgradeClick = onNavigateToPaywall,
-                strings = state.strings
-            )
-        }
+        // Always show subscription status: Trial for free users, Pro for active subscribers.
+        TrialBanner(
+            isPremium = state.isPremium,
+            scansUsed = state.trialScansUsed,
+            scansRemaining = state.trialScansRemaining,
+            scansLimit = state.trialScansLimit,
+            onUpgradeClick = onNavigateToPaywall,
+            strings = state.strings
+        )
 
         if (!state.hasMediaPermission) {
             PermissionRequiredBanner(
@@ -131,8 +163,7 @@ fun MainScreen(
 
         if (state.showPaywall) {
             PaywallBanner(
-                scannedCount = state.scannedCount,
-                onBuyProClick = onNavigateToPaywall,
+                onBuyPremiumClick = onNavigateToPaywall,
                 strings = state.strings
             )
         }
@@ -162,7 +193,11 @@ private fun SearchTopBar(
     isSyncing: Boolean,
     strings: com.smartscan.ai.ui.strings.StringResources,
     showEmptyScans: Boolean,
-    onToggleEmptyScansFilter: () -> Unit
+    onToggleEmptyScansFilter: () -> Unit,
+    onClearAllScansClick: () -> Unit,
+    clearAllScansCount: Int,
+    canClearAllScans: Boolean,
+    isSyncEnabled: Boolean
 ) {
     Column {
         Row(
@@ -202,7 +237,7 @@ private fun SearchTopBar(
                 .padding(horizontal = 12.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onSyncNow, enabled = !isSyncing) {
+            TextButton(onClick = onSyncNow, enabled = !isSyncing && isSyncEnabled) {
                 Text(if (isSyncing) strings.syncing else strings.syncNow)
             }
             TextButton(onClick = onToggleEmptyScansFilter) {
@@ -211,8 +246,19 @@ private fun SearchTopBar(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            TextButton(
+                onClick = onClearAllScansClick,
+                enabled = canClearAllScans && !isSyncing
+            ) {
+                Text(buildClearAllScansLabel(strings.clearAllScans, clearAllScansCount))
+            }
         }
     }
+}
+
+internal fun buildClearAllScansLabel(baseLabel: String, count: Int): String {
+    val safeCount = count.coerceAtLeast(0)
+    return "$baseLabel ($safeCount)"
 }
 
 @Composable
@@ -240,8 +286,7 @@ private fun PermissionRequiredBanner(
 
 @Composable
 private fun PaywallBanner(
-    scannedCount: Int,
-    onBuyProClick: () -> Unit,
+    onBuyPremiumClick: () -> Unit,
     strings: com.smartscan.ai.ui.strings.StringResources
 ) {
     Row(
@@ -252,13 +297,13 @@ private fun PaywallBanner(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = strings.paywallMessage.format(scannedCount),
+            text = strings.paywallMessage,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier.weight(1f)
         )
-        TextButton(onClick = onBuyProClick) {
-            Text(strings.buyPro)
+        TextButton(onClick = onBuyPremiumClick) {
+            Text(strings.buyPremium)
         }
     }
 }

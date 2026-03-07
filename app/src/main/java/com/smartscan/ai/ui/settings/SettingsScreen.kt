@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,7 +38,8 @@ fun SettingsScreenRoute(
     SettingsScreen(
         state = state,
         onNavigateBack = onNavigateBack,
-        onLanguageSelect = viewModel::setLanguage
+        onLanguageSelect = viewModel::setLanguage,
+        onSyncScreenshotsOnlyChange = viewModel::setSyncScreenshotsOnly
     )
 }
 
@@ -46,7 +48,8 @@ fun SettingsScreenRoute(
 fun SettingsScreen(
     state: SettingsUiState,
     onNavigateBack: () -> Unit,
-    onLanguageSelect: (AppLanguage) -> Unit
+    onLanguageSelect: (AppLanguage) -> Unit,
+    onSyncScreenshotsOnlyChange: (Boolean) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -68,6 +71,32 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSyncScreenshotsOnlyChange(!state.syncScreenshotsOnly) }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = state.strings.syncScreenshotsOnlyTitle,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = state.strings.syncScreenshotsOnlySubtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Checkbox(
+                    checked = state.syncScreenshotsOnly,
+                    onCheckedChange = onSyncScreenshotsOnlyChange
+                )
+            }
+            HorizontalDivider()
+
             // Language Section
             Text(
                 text = state.strings.language,
@@ -116,4 +145,3 @@ private fun LanguageItem(
         }
     }
 }
-
