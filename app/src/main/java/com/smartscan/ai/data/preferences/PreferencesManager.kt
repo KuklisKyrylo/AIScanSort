@@ -35,6 +35,9 @@ class PreferencesManager @Inject constructor(
         val SUBSCRIPTION_EXPIRY = longPreferencesKey("subscription_expiry")
         val TRIAL_START_DATE = longPreferencesKey("trial_start_date")
         val SYNC_SCREENSHOTS_ONLY = booleanPreferencesKey("sync_screenshots_only")
+        val LAST_SUCCESSFUL_SYNC_MS = longPreferencesKey("last_successful_sync_ms")
+        val LAST_SUMMARY_SCANNED_COUNT = intPreferencesKey("last_summary_scanned_count")
+        val LAST_SUMMARY_ELAPSED_SECONDS = intPreferencesKey("last_summary_elapsed_seconds")
     }
 
     private val deviceId: String by lazy {
@@ -85,6 +88,18 @@ class PreferencesManager @Inject constructor(
 
     val syncScreenshotsOnlyFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[Keys.SYNC_SCREENSHOTS_ONLY] ?: true
+    }
+
+    val lastSuccessfulSyncTimeFlow: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[Keys.LAST_SUCCESSFUL_SYNC_MS] ?: 0L
+    }
+
+    val lastSummaryScannedCountFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[Keys.LAST_SUMMARY_SCANNED_COUNT] ?: 0
+    }
+
+    val lastSummaryElapsedSecondsFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[Keys.LAST_SUMMARY_ELAPSED_SECONDS] ?: 0
     }
 
     suspend fun setLanguage(language: AppLanguage) {
@@ -154,7 +169,28 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    suspend fun setLastSuccessfulSyncTimeMillis(timestampMs: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.LAST_SUCCESSFUL_SYNC_MS] = timestampMs
+        }
+    }
+
+    suspend fun setLastSummaryMetrics(scannedCount: Int, elapsedSeconds: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.LAST_SUMMARY_SCANNED_COUNT] = scannedCount.coerceAtLeast(0)
+            preferences[Keys.LAST_SUMMARY_ELAPSED_SECONDS] = elapsedSeconds.coerceAtLeast(0)
+        }
+    }
+
     fun getLifetimeScanCount(): Int {
         return securePrefs.getInt(getSecureKey("scan_count"), 0)
+    }
+
+    fun isFirstTimeUser(): Boolean {
+        return securePrefs.getBoolean("first_time_user", true)
+    }
+
+    fun markFirstTimeUserComplete() {
+        securePrefs.edit().putBoolean("first_time_user", false).apply()
     }
 }

@@ -32,6 +32,9 @@ interface ScanDao {
     @Query("DELETE FROM scans")
     suspend fun deleteAll()
 
+    @Query("DELETE FROM scans WHERE scannedAtEpochMillis >= :timestamp")
+    suspend fun deleteScannedAfter(timestamp: Long): Int
+
     @Query("SELECT COUNT(id) FROM scans")
     fun observeScannedCount(): Flow<Int>
 

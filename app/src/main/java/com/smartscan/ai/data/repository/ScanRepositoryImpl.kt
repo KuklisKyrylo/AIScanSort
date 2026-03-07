@@ -42,6 +42,10 @@ class ScanRepositoryImpl @Inject constructor(
         scanDao.deleteAll()
     }
 
+    override suspend fun deleteScannedImagesAfter(timestamp: Long): Int {
+        return scanDao.deleteScannedAfter(timestamp)
+    }
+
     private fun String.toFtsPrefixQuery(): String {
         return trim()
             .split(Regex("\\s+"))

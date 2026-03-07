@@ -17,4 +17,6 @@ interface ScanRepository {
     suspend fun deleteScannedImage(imageId: Long)
 
     suspend fun deleteAllScannedImages()
+
+    suspend fun deleteScannedImagesAfter(timestamp: Long): Int
 }

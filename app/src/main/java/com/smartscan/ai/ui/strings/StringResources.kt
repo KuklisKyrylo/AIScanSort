@@ -18,6 +18,8 @@ data class StringResources(
     val syncingGallery: String,
     val syncComplete: String,
     val freeLimitReached: String,
+    val syncedLabel: String,
+    val skippedLabel: String,
     val imageDetails: String,
     val share: String,
     val delete: String,
@@ -67,7 +69,48 @@ data class StringResources(
     val clearAllScans: String,
     val clearAllScansTitle: String,
     val clearAllScansMessage: String,
-    val clearAllScansSuccess: String
+    val clearAllScansSuccess: String,
+    // === Onboarding ===
+    val onboardingTitle1: String,
+    val onboardingSubtitle1: String,
+    val onboardingTitle2: String,
+    val onboardingSubtitle2: String,
+    val skip: String,
+    val next: String,
+    val done: String,
+    // === Scanning Progress ===
+    val onboardingScanning: String,
+    val scannedDocuments: String,
+    val scanningHint: String,
+    // === Empty State ===
+    val emptyStateTitle: String,
+    val emptyStateSubtitle: String,
+    val emptyStateTip1: String,
+    val emptyStateTip2: String,
+    val emptyStateTip3: String,
+    val scanFirstDocument: String,
+    // === Screenshots Folder Empty ===
+    val screenshotsFolderEmptyHint: String,
+    val currentlyScreenshotsOnly: String,
+    val currentlyAllGallery: String,
+    val switchToAllGallery: String,
+    val syncAllGallery: String,
+    // === Sync Control ===
+    val stopSync: String,
+    val continueSync: String,
+    val startOver: String,
+    val startOverConfirmTitle: String,
+    val startOverConfirmMessage: String,
+    val startOverConfirm: String,
+    // === Sync Metrics ===
+    val syncMetricsScanned: String,
+    val syncMetricsElapsedTime: String,
+    val syncMetricsLastSync: String,
+    val syncMetricsSummaryTitle: String,
+    val syncMetricsNow: String,
+    val syncMetricsMinutesAgo: String,
+    val syncMetricsHoursAgo: String,
+    val syncMetricsDaysAgo: String
 )
 
 fun getStrings(language: AppLanguage): StringResources = when (language) {
@@ -92,8 +135,10 @@ private val englishStrings = StringResources(
     language = "Language",
     back = "Back",
     syncingGallery = "Syncing gallery...",
-    syncComplete = "Synced %d, skipped %d.",
-    freeLimitReached = "Synced %d, skipped %d. Free limit reached.",
+    syncComplete = "%s %d, %s %d.",
+    freeLimitReached = "%s %d, %s %d. Free limit reached.",
+    syncedLabel = "Synced",
+    skippedLabel = "skipped",
     imageDetails = "Image Details",
     share = "Share",
     delete = "Delete",
@@ -143,7 +188,48 @@ private val englishStrings = StringResources(
     clearAllScans = "Clear all",
     clearAllScansTitle = "Clear all scans?",
     clearAllScansMessage = "This will permanently delete all scanned records from the app database.",
-    clearAllScansSuccess = "All scanned records were removed."
+    clearAllScansSuccess = "All scanned records were removed.",
+    // === Onboarding ===
+    onboardingTitle1 = "We're scanning your gallery",
+    onboardingSubtitle1 = "Your Screenshots folder is loading now...",
+    onboardingTitle2 = "AI sorts everything for you",
+    onboardingSubtitle2 = "Receipts, passports, contracts — automatically organized into folders",
+    skip = "Skip",
+    next = "Next",
+    done = "Done",
+    // === Scanning Progress ===
+    onboardingScanning = "Scanning your gallery...",
+    scannedDocuments = "Processed: %d documents",
+    scanningHint = "This may take a moment...",
+    // === Empty State ===
+    emptyStateTitle = "No documents yet?",
+    emptyStateSubtitle = "AI automatically sorts your photos and documents",
+    emptyStateTip1 = "Scan receipts, passports, contracts",
+    emptyStateTip2 = "AI automatically detects the type",
+    emptyStateTip3 = "Everything sorted into folders",
+    scanFirstDocument = "Scan first document",
+    // === Screenshots Folder Empty ===
+    screenshotsFolderEmptyHint = "By default, we sync only the Screenshots folder. You can switch to sync all photos from your gallery.",
+    currentlyScreenshotsOnly = "Currently: Screenshots only",
+    currentlyAllGallery = "Currently: All gallery",
+    switchToAllGallery = "Switch to All Gallery & Sync",
+    syncAllGallery = "Sync All Gallery",
+    // === Sync Control ===
+    stopSync = "Stop",
+    continueSync = "Continue",
+    startOver = "Start over",
+    startOverConfirmTitle = "Start over?",
+    startOverConfirmMessage = "This will delete all documents scanned in this session and restart from the beginning.",
+    startOverConfirm = "Start over",
+    // === Sync Metrics ===
+    syncMetricsScanned = "Scanned: %d",
+    syncMetricsElapsedTime = "Elapsed time: %s",
+    syncMetricsLastSync = "Last sync: %s",
+    syncMetricsSummaryTitle = "Sync summary",
+    syncMetricsNow = "now",
+    syncMetricsMinutesAgo = "%dm ago",
+    syncMetricsHoursAgo = "%dh ago",
+    syncMetricsDaysAgo = "%dd ago"
 )
 
 private val russianStrings = StringResources(
@@ -160,8 +246,10 @@ private val russianStrings = StringResources(
     language = "Язык",
     back = "Назад",
     syncingGallery = "Синхронизация галереи...",
-    syncComplete = "Синхронизировано %d, пропущено %d.",
-    freeLimitReached = "Синхронизировано %d, пропущено %d. Достигнут лимит.",
+    syncComplete = "%s %d, %s %d.",
+    freeLimitReached = "%s %d, %s %d. Достигнут лимит.",
+    syncedLabel = "Синхронизировано",
+    skippedLabel = "Пропущено",
     imageDetails = "Детали изображения",
     share = "Поделиться",
     delete = "Удалить",
@@ -211,7 +299,48 @@ private val russianStrings = StringResources(
     clearAllScans = "Очистить все",
     clearAllScansTitle = "Очистить все сканы?",
     clearAllScansMessage = "Все отсканированные записи будут безвозвратно удалены из базы приложения.",
-    clearAllScansSuccess = "Все отсканированные записи удалены."
+    clearAllScansSuccess = "Все отсканированные записи удалены.",
+    // === Onboarding ===
+    onboardingTitle1 = "Сканируем вашу галерею",
+    onboardingSubtitle1 = "Папка Скриншоты загружается прямо сейчас...",
+    onboardingTitle2 = "AI сортирует всё за вас",
+    onboardingSubtitle2 = "Чеки, паспорта, договоры — автоматически по папкам",
+    skip = "Пропустить",
+    next = "Далее",
+    done = "Готово",
+    // === Scanning Progress ===
+    onboardingScanning = "Сканируем вашу галерею...",
+    scannedDocuments = "Обработано: %d документов",
+    scanningHint = "Это может занять некоторое время...",
+    // === Empty State ===
+    emptyStateTitle = "Никаких документов?",
+    emptyStateSubtitle = "AI сортирует ваши фото и документы автоматически",
+    emptyStateTip1 = "Сканируйте чеки, паспорта, договоры",
+    emptyStateTip2 = "AI автоматически определяет тип документа",
+    emptyStateTip3 = "Всё сортируется по папкам",
+    scanFirstDocument = "Сканировать первый документ",
+    // === Screenshots Folder Empty ===
+    screenshotsFolderEmptyHint = "По умолчанию синхронизируется только папка Скриншоты. Вы можете переключиться на синхронизацию всех фото из галереи.",
+    currentlyScreenshotsOnly = "Сейчас: только скриншоты",
+    currentlyAllGallery = "Сейчас: вся галерея",
+    switchToAllGallery = "Переключить на всю галерею и синхронизировать",
+    syncAllGallery = "Синхронизировать всю галерею",
+    // === Sync Control ===
+    stopSync = "Остановить",
+    continueSync = "Продолжить",
+    startOver = "Начать заново",
+    startOverConfirmTitle = "Начать заново?",
+    startOverConfirmMessage = "Это удалит все документы, отсканированные в этой сессии, и начнет заново с начала.",
+    startOverConfirm = "Начать заново",
+    // === Sync Metrics ===
+    syncMetricsScanned = "Отсканировано: %d",
+    syncMetricsElapsedTime = "Время: %s",
+    syncMetricsLastSync = "Последняя синхронизация: %s",
+    syncMetricsSummaryTitle = "Итоги синхронизации",
+    syncMetricsNow = "сейчас",
+    syncMetricsMinutesAgo = "%d мин назад",
+    syncMetricsHoursAgo = "%d ч назад",
+    syncMetricsDaysAgo = "%d дн назад"
 )
 
 private val spanishStrings = StringResources(
@@ -228,8 +357,10 @@ private val spanishStrings = StringResources(
     language = "Idioma",
     back = "Atrás",
     syncingGallery = "Sincronizando galería...",
-    syncComplete = "Sincronizado %d, omitido %d.",
-    freeLimitReached = "Sincronizado %d, omitido %d. Límite alcanzado.",
+    syncComplete = "%s %d, %s %d.",
+    freeLimitReached = "%s %d, %s %d. Límite alcanzado.",
+    syncedLabel = "Sincronizado",
+    skippedLabel = "Omitido",
     imageDetails = "Detalles de imagen",
     share = "Compartir",
     delete = "Eliminar",
@@ -279,7 +410,48 @@ private val spanishStrings = StringResources(
     clearAllScans = "Borrar todo",
     clearAllScansTitle = "Borrar todos los escaneos?",
     clearAllScansMessage = "Esto eliminara permanentemente todos los registros escaneados de la base de datos.",
-    clearAllScansSuccess = "Todos los registros escaneados fueron eliminados."
+    clearAllScansSuccess = "Todos los registros escaneados fueron eliminados.",
+    // === Onboarding ===
+    onboardingTitle1 = "Estamos escaneando tu galería",
+    onboardingSubtitle1 = "Tu carpeta de Capturas se está cargando...",
+    onboardingTitle2 = "La IA ordena todo por ti",
+    onboardingSubtitle2 = "Recibos, pasaportes, contratos — automáticamente organizados",
+    skip = "Omitir",
+    next = "Siguiente",
+    done = "Listo",
+    // === Scanning Progress ===
+    onboardingScanning = "Escaneando tu galería...",
+    scannedDocuments = "Procesados: %d documentos",
+    scanningHint = "Esto puede tomar un momento...",
+    // === Empty State ===
+    emptyStateTitle = "¿Sin documentos aún?",
+    emptyStateSubtitle = "La IA ordena automáticamente tus fotos y documentos",
+    emptyStateTip1 = "Escanea recibos, pasaportes, contratos",
+    emptyStateTip2 = "La IA detecta automáticamente el tipo",
+    emptyStateTip3 = "Todo ordenado en carpetas",
+    scanFirstDocument = "Escanear primer documento",
+    // === Screenshots Folder Empty ===
+    screenshotsFolderEmptyHint = "Por defecto, sincronizamos solo la carpeta de Capturas. Puedes cambiar para sincronizar todas las fotos de tu galería.",
+    currentlyScreenshotsOnly = "Actualmente: solo capturas",
+    currentlyAllGallery = "Actualmente: toda la galería",
+    switchToAllGallery = "Cambiar a toda la galería y sincronizar",
+    syncAllGallery = "Sincronizar toda la galería",
+    // === Sync Control ===
+    stopSync = "Detener",
+    continueSync = "Continuar",
+    startOver = "Empezar de nuevo",
+    startOverConfirmTitle = "¿Empezar de nuevo?",
+    startOverConfirmMessage = "Esto eliminará todos los documentos escaneados en esta sesión y comenzará desde el principio.",
+    startOverConfirm = "Empezar de nuevo",
+    // === Sync Metrics ===
+    syncMetricsScanned = "Escaneado: %d",
+    syncMetricsElapsedTime = "Tiempo transcurrido: %s",
+    syncMetricsLastSync = "Última sincronización: %s",
+    syncMetricsSummaryTitle = "Resumen de sincronización",
+    syncMetricsNow = "ahora",
+    syncMetricsMinutesAgo = "hace %d min",
+    syncMetricsHoursAgo = "hace %d h",
+    syncMetricsDaysAgo = "hace %d d"
 )
 
 private val germanStrings = StringResources(
@@ -296,8 +468,10 @@ private val germanStrings = StringResources(
     language = "Sprache",
     back = "Zurück",
     syncingGallery = "Galerie wird synchronisiert...",
-    syncComplete = "Synchronisiert %d, übersprungen %d.",
-    freeLimitReached = "Synchronisiert %d, übersprungen %d. Limit erreicht.",
+    syncComplete = "%s %d, %s %d.",
+    freeLimitReached = "%s %d, %s %d. Limit erreicht.",
+    syncedLabel = "Synchronisiert",
+    skippedLabel = "Übersprungen",
     imageDetails = "Bilddetails",
     share = "Teilen",
     delete = "Löschen",
@@ -347,7 +521,48 @@ private val germanStrings = StringResources(
     clearAllScans = "Alles loschen",
     clearAllScansTitle = "Alle Scans loschen?",
     clearAllScansMessage = "Dadurch werden alle gescannten Eintrage dauerhaft aus der App-Datenbank entfernt.",
-    clearAllScansSuccess = "Alle gescannten Eintrage wurden entfernt."
+    clearAllScansSuccess = "Alle gescannten Eintrage wurden entfernt.",
+    // === Onboarding ===
+    onboardingTitle1 = "Wir scannen Ihre Galerie",
+    onboardingSubtitle1 = "Ihr Screenshot-Ordner wird gerade geladen...",
+    onboardingTitle2 = "KI sortiert alles für Sie",
+    onboardingSubtitle2 = "Quittungen, Pässe, Verträge — automatisch organisiert",
+    skip = "Überspringen",
+    next = "Weiter",
+    done = "Fertig",
+    // === Scanning Progress ===
+    onboardingScanning = "Ihre Galerie wird gescannt...",
+    scannedDocuments = "Verarbeitet: %d Dokumente",
+    scanningHint = "Dies kann einen Moment dauern...",
+    // === Empty State ===
+    emptyStateTitle = "Noch keine Dokumente?",
+    emptyStateSubtitle = "KI sortiert Ihre Fotos und Dokumente automatisch",
+    emptyStateTip1 = "Scannen Sie Quittungen, Pässe, Verträge",
+    emptyStateTip2 = "KI erkennt den Typ automatisch",
+    emptyStateTip3 = "Alles in Ordner sortiert",
+    scanFirstDocument = "Erstes Dokument scannen",
+    // === Screenshots Folder Empty ===
+    screenshotsFolderEmptyHint = "Standardmäßig synchronisieren wir nur den Screenshot-Ordner. Sie können zur Synchronisierung aller Fotos aus Ihrer Galerie wechseln.",
+    currentlyScreenshotsOnly = "Aktuell: nur Screenshots",
+    currentlyAllGallery = "Aktuell: gesamte Galerie",
+    switchToAllGallery = "Zu gesamter Galerie wechseln & synchronisieren",
+    syncAllGallery = "Gesamte Galerie synchronisieren",
+    // === Sync Control ===
+    stopSync = "Stoppen",
+    continueSync = "Fortsetzen",
+    startOver = "Neu starten",
+    startOverConfirmTitle = "Neu starten?",
+    startOverConfirmMessage = "Dadurch werden alle in dieser Sitzung gescannten Dokumente gelöscht und von vorne begonnen.",
+    startOverConfirm = "Neu starten",
+    // === Sync Metrics ===
+    syncMetricsScanned = "Gescannt: %d",
+    syncMetricsElapsedTime = "Verstrichene Zeit: %s",
+    syncMetricsLastSync = "Letzte Synchronisierung: %s",
+    syncMetricsSummaryTitle = "Synchronisierungszusammenfassung",
+    syncMetricsNow = "jetzt",
+    syncMetricsMinutesAgo = "vor %d Min",
+    syncMetricsHoursAgo = "vor %d Std",
+    syncMetricsDaysAgo = "vor %d Tg"
 )
 
 private val chineseStrings = StringResources(
@@ -364,8 +579,10 @@ private val chineseStrings = StringResources(
     language = "语言",
     back = "返回",
     syncingGallery = "正在同步图库...",
-    syncComplete = "已同步 %d，已跳过 %d。",
-    freeLimitReached = "已同步 %d，已跳过 %d。已达到免费限制。",
+    syncComplete = "%s %d，%s %d。",
+    freeLimitReached = "%s %d，%s %d。已达到免费限制。",
+    syncedLabel = "已同步",
+    skippedLabel = "已跳过",
     imageDetails = "图片详情",
     share = "分享",
     delete = "删除",
@@ -414,6 +631,47 @@ private val chineseStrings = StringResources(
     syncScreenshotsOnlySubtitle = "开启后，仅同步截图文件夹中的图片",
     clearAllScans = "清空全部",
     clearAllScansTitle = "清空所有扫描记录？",
-    clearAllScansMessage = "这将从应用数据库中永久删除所有扫描记录。",
-    clearAllScansSuccess = "所有扫描记录已删除。"
+    clearAllScansMessage = "这将删除本次会话中扫描的所有文档，并从头开始。",
+    clearAllScansSuccess = "所有扫描记录已删除。",
+    // === Onboarding ===
+    onboardingTitle1 = "正在扫描您的图库",
+    onboardingSubtitle1 = "您的屏幕截图文件夹正在加载...",
+    onboardingTitle2 = "AI 为您自动分类",
+    onboardingSubtitle2 = "发票、护照、合同 — 自动分类",
+    skip = "跳过",
+    next = "下一步",
+    done = "完成",
+    // === Scanning Progress ===
+    onboardingScanning = "正在扫描您的图库...",
+    scannedDocuments = "已处理：%d 个文档",
+    scanningHint = "这可能需要一些时间...",
+    // === Empty State ===
+    emptyStateTitle = "还没有文档？",
+    emptyStateSubtitle = "AI 自动分类您的照片和文档",
+    emptyStateTip1 = "扫描发票、护照、合同",
+    emptyStateTip2 = "AI 自动检测文档类型",
+    emptyStateTip3 = "所有文件按文件夹分类",
+    scanFirstDocument = "扫描首个文档",
+    // === Screenshots Folder Empty ===
+    screenshotsFolderEmptyHint = "默认情况下，我们仅同步屏幕截图文件夹。您可以切换为同步图库中的所有照片。",
+    currentlyScreenshotsOnly = "当前：仅截图",
+    currentlyAllGallery = "当前：全部图库",
+    switchToAllGallery = "切换到全部图库并同步",
+    syncAllGallery = "同步全部图库",
+    // === Sync Control ===
+    stopSync = "停止",
+    continueSync = "继续",
+    startOver = "重新开始",
+    startOverConfirmTitle = "重新开始？",
+    startOverConfirmMessage = "这将删除本次会话中扫描的所有文档，并从头开始。",
+    startOverConfirm = "重新开始",
+    // === Sync Metrics ===
+    syncMetricsScanned = "已扫描: %d",
+    syncMetricsElapsedTime = "耗时: %s",
+    syncMetricsLastSync = "上次同步: %s",
+    syncMetricsSummaryTitle = "同步摘要",
+    syncMetricsNow = "刚刚",
+    syncMetricsMinutesAgo = "%d分钟前",
+    syncMetricsHoursAgo = "%d小时前",
+    syncMetricsDaysAgo = "%d天前"
 )
