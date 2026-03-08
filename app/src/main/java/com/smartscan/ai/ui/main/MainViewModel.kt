@@ -125,6 +125,7 @@ class MainViewModel @Inject constructor(
         checkFirstTimeUser()
         observeImages()
         observePaywallState()
+        observeBillingPrices()
     }
 
     private fun checkFirstTimeUser() {
@@ -234,6 +235,10 @@ class MainViewModel @Inject constructor(
         billingRepository.launchLifetimePurchase(activity)
     }
 
+    fun onRestorePurchasesClick() {
+        billingRepository.restorePurchases()
+    }
+
     fun toggleEmptyScansFilter() {
         val newValue = !showEmptyScansFlow.value
         showEmptyScansFlow.value = newValue
@@ -333,17 +338,34 @@ class MainViewModel @Inject constructor(
 
     private fun observePaywallState() {
         viewModelScope.launch {
-            combine(
+            val coreStateFlow = combine(
                 billingRepository.observeIsPremium(),
                 scanRepository.observeScannedCount(),
                 billingRepository.observeSubscriptionType(),
                 preferencesManager.scanCountFlow,
                 preferencesManager.syncScreenshotsOnlyFlow
             ) { isPremium, scannedCount, subscriptionType, trialScans, screenshotsOnly ->
-                val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= FREE_TRIAL_SCAN_LIMIT
-                val isSyncAllowed = !showPaywall
-                Sextuple(isPremium, scannedCount, trialScans, showPaywall, isSyncAllowed, screenshotsOnly)
-            }.collect { (isPremium, scannedCount, trialScans, showPaywall, isSyncAllowed, screenshotsOnly) ->
+                Quintuple(isPremium, scannedCount, subscriptionType, trialScans, screenshotsOnly)
+            }
+
+            val billingUiFlow = combine(
+                billingRepository.observeBillingInProgress(),
+                billingRepository.observeBillingMessage()
+            ) { inProgress, message ->
+                Pair(inProgress, message)
+            }
+
+            combine(coreStateFlow, billingUiFlow) { core, billingStatus ->
+                Pair(core, billingStatus)
+            }.collect { (core, billingStatus) ->
+                val isPremium = core.first
+                val scannedCount = core.second
+                val subscriptionType = core.third
+                val trialScans = core.fourth
+                val screenshotsOnly = core.fifth
+
+                val paywallState = resolvePaywallState(subscriptionType, trialScans, FREE_TRIAL_SCAN_LIMIT)
+
                 _uiState.update {
                     it.copy(
                         isPremium = isPremium,
@@ -351,9 +373,29 @@ class MainViewModel @Inject constructor(
                         trialScansUsed = trialScans,
                         trialScansRemaining = (FREE_TRIAL_SCAN_LIMIT - trialScans).coerceAtLeast(0),
                         trialScansLimit = FREE_TRIAL_SCAN_LIMIT,
-                        showPaywall = showPaywall,
-                        isSyncAllowed = isSyncAllowed,
-                        screenshotsOnly = screenshotsOnly
+                        showPaywall = paywallState.showPaywall,
+                        isSyncAllowed = paywallState.isSyncAllowed,
+                        screenshotsOnly = screenshotsOnly,
+                        isBillingInProgress = billingStatus.first,
+                        billingMessage = billingStatus.second
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeBillingPrices() {
+        viewModelScope.launch {
+            combine(
+                billingRepository.observeMonthlyPrice(),
+                billingRepository.observeLifetimePrice()
+            ) { monthlyPrice, lifetimePrice ->
+                Pair(monthlyPrice, lifetimePrice)
+            }.collect { (monthlyPrice, lifetimePrice) ->
+                _uiState.update {
+                    it.copy(
+                        monthlyPrice = monthlyPrice,
+                        lifetimePrice = lifetimePrice
                     )
                 }
             }
@@ -489,6 +531,23 @@ internal fun buildClearAllStatusMessage(strings: StringResources): String {
     return strings.clearAllScansSuccess
 }
 
+internal fun resolvePaywallState(
+    subscriptionType: SubscriptionType,
+    trialScans: Int,
+    freeTrialScanLimit: Int = 1200
+): PaywallState {
+    val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= freeTrialScanLimit
+    return PaywallState(
+        showPaywall = showPaywall,
+        isSyncAllowed = !showPaywall
+    )
+}
+
+internal data class PaywallState(
+    val showPaywall: Boolean,
+    val isSyncAllowed: Boolean
+)
+
 data class MainUiState(
     val searchQuery: String = "",
     val images: List<ScannedImage> = emptyList(),
@@ -517,7 +576,11 @@ data class MainUiState(
     val syncStartTimeMs: Long = 0L,
     val sessionElapsedSeconds: Int = 0,
     val lastSuccessfulSyncTimeMs: Long = 0L,
-    val lastSyncResultForStatus: SyncGalleryResult? = null
+    val lastSyncResultForStatus: SyncGalleryResult? = null,
+    val isBillingInProgress: Boolean = false,
+    val billingMessage: String = "",
+    val monthlyPrice: String = "",
+    val lifetimePrice: String = ""
 )
 
 enum class ScanSortOption {

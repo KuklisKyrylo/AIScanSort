@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,8 +38,18 @@ fun PaywallScreen(
     strings: StringResources,
     onNavigateBack: () -> Unit,
     onMonthlyClick: () -> Unit,
-    onLifetimeClick: () -> Unit
+    onLifetimeClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    onRestoreClick: () -> Unit,
+    isBillingInProgress: Boolean,
+    billingMessage: String,
+    monthlyPrice: String,
+    lifetimePrice: String
 ) {
+    val resolvedMonthlyPrice = monthlyPrice.ifBlank { "-" }
+    val resolvedLifetimePrice = lifetimePrice.ifBlank { "-" }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -100,10 +111,11 @@ fun PaywallScreen(
             PricingCard(
                 title = "📅 ${strings.paywallMonthlyTitle}",
                 subtitle = strings.paywallMonthlySubtitle,
-                price = "$2.99",
+                price = resolvedMonthlyPrice,
                 period = strings.paywallMonthlyPeriod,
                 features = listOf(strings.paywallMonthlyFeatureA, strings.paywallMonthlyFeatureB),
                 onClick = onMonthlyClick,
+                enabled = !isBillingInProgress,
                 isPrimary = false,
                 strings = strings
             )
@@ -111,13 +123,34 @@ fun PaywallScreen(
             PricingCard(
                 title = "🎁 ${strings.paywallLifetimeTitle}",
                 subtitle = strings.paywallLifetimeSubtitle,
-                price = "$19.99",
+                price = resolvedLifetimePrice,
                 period = strings.paywallLifetimePeriod,
                 features = listOf(strings.paywallLifetimeFeatureA, strings.paywallLifetimeFeatureB),
                 onClick = onLifetimeClick,
+                enabled = !isBillingInProgress,
                 isPrimary = true,
                 strings = strings
             )
+
+            if (isBillingInProgress) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            if (billingMessage.isNotBlank()) {
+                Text(
+                    text = billingMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             // Legal
             Column(
@@ -132,15 +165,15 @@ fun PaywallScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onTermsClick) {
                         Text(strings.paywallTerms, style = MaterialTheme.typography.labelSmall)
                     }
                     Text(" • ", style = MaterialTheme.typography.labelSmall)
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onPrivacyClick) {
                         Text(strings.paywallPrivacy, style = MaterialTheme.typography.labelSmall)
                     }
                     Text(" • ", style = MaterialTheme.typography.labelSmall)
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onRestoreClick, enabled = !isBillingInProgress) {
                         Text(strings.paywallRestore, style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -171,6 +204,7 @@ private fun PricingCard(
     period: String,
     features: List<String>,
     onClick: () -> Unit,
+    enabled: Boolean,
     isPrimary: Boolean,
     strings: StringResources
 ) {
@@ -229,6 +263,7 @@ private fun PricingCard(
             if (isPrimary) {
                 Button(
                     onClick = onClick,
+                    enabled = enabled,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(strings.paywallChooseLifetime)
@@ -236,6 +271,7 @@ private fun PricingCard(
             } else {
                 OutlinedButton(
                     onClick = onClick,
+                    enabled = enabled,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(strings.paywallTryMonthly)

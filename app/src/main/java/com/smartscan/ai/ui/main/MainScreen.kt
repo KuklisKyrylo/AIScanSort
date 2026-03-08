@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,9 +52,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -123,6 +130,79 @@ fun MainScreenRoute(
 }
 
 @Composable
+private fun ThemedBackground(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    androidx.compose.foundation.layout.Box(modifier = modifier) {
+        // Soft gradient background (very light violet/gray)
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF5F3F7), // Very light violet
+                            Color(0xFFF8F8F9), // Very light gray
+                            Color(0xFFFAFAFB)  // Almost white
+                        )
+                    )
+                )
+        )
+
+        // Low-opacity scan grid accent
+        Canvas(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val gridSize = 80f
+            val strokeWidth = 1f
+            val gridColor = Color(0x08000000) // Very low opacity black for subtle grid
+
+            // Draw vertical lines
+            var x = 0f
+            while (x <= size.width) {
+                drawLine(
+                    color = gridColor,
+                    start = Offset(x, 0f),
+                    end = Offset(x, size.height),
+                    strokeWidth = strokeWidth
+                )
+                x += gridSize
+            }
+
+            // Draw horizontal lines
+            var y = 0f
+            while (y <= size.height) {
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, y),
+                    end = Offset(size.width, y),
+                    strokeWidth = strokeWidth
+                )
+                y += gridSize
+            }
+
+            // Add subtle diagonal accent lines for "scan" effect
+            val diagonalSpacing = 160f
+            val diagonalColor = Color(0x05673AB7) // Very subtle violet accent
+            var diagonal = -size.height
+            while (diagonal <= size.width) {
+                drawLine(
+                    color = diagonalColor,
+                    start = Offset(diagonal, 0f),
+                    end = Offset(diagonal + size.height, size.height),
+                    strokeWidth = strokeWidth * 1.5f
+                )
+                diagonal += diagonalSpacing
+            }
+        }
+
+        // Content on top
+        content()
+    }
+}
+
+@Composable
 fun MainScreen(
     state: MainUiState,
     onSearchQueryChange: (String) -> Unit,
@@ -186,10 +266,11 @@ fun MainScreen(
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Show scanning progress or empty state
-        when {
-            state.isLoading && state.images.isEmpty() -> {
+    ThemedBackground(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Show scanning progress or empty state
+            when {
+                state.isLoading && state.images.isEmpty() -> {
                 ScanningInProgressView(
                     scannedCount = state.syncProcessed,
                     isFirstTime = true,
@@ -247,6 +328,7 @@ fun MainScreen(
                     syncStartTimeMs = state.syncStartTimeMs,
                     sessionElapsedSeconds = state.sessionElapsedSeconds,
                     lastSuccessfulSyncTimeMs = state.lastSuccessfulSyncTimeMs,
+                    sortOption = state.sortOption,
                     onSortOptionSelected = onSortOptionSelected
                 )
 
@@ -290,6 +372,7 @@ fun MainScreen(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -315,6 +398,7 @@ private fun SearchTopBar(
     syncStartTimeMs: Long = 0L,
     sessionElapsedSeconds: Int = 0,
     lastSuccessfulSyncTimeMs: Long = 0L,
+    sortOption: ScanSortOption,
     onSortOptionSelected: (ScanSortOption) -> Unit
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
@@ -531,14 +615,44 @@ private fun SearchTopBar(
                     onDismissRequest = { showSortMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(strings.sortBySyncDate) },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (sortOption == ScanSortOption.SYNC_DATE) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Text(strings.sortBySyncDate)
+                            }
+                        },
                         onClick = {
                             onSortOptionSelected(ScanSortOption.SYNC_DATE)
                             showSortMenu = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(strings.sortByPhotoDate) },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (sortOption == ScanSortOption.PHOTO_CREATED_DATE) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Text(strings.sortByPhotoDate)
+                            }
+                        },
                         onClick = {
                             onSortOptionSelected(ScanSortOption.PHOTO_CREATED_DATE)
                             showSortMenu = false
