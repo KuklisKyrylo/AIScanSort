@@ -8,7 +8,7 @@ class MainUiStateTest {
     @Test
     fun `default trial values match free tier limit`() {
         val state = MainUiState()
-        assertEquals(300, state.trialScansLimit)
-        assertEquals(300, state.trialScansRemaining)
+        assertEquals(1200, state.trialScansLimit)
+        assertEquals(1200, state.trialScansRemaining)
     }
 }

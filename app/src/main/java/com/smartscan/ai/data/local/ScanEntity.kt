@@ -11,6 +11,6 @@ data class ScanEntity(
     val extractedText: String,
     val tagsSerialized: String,
     val scannedAtEpochMillis: Long,
+    val photoCreatedAtEpochMillis: Long?,
     val status: String
 )
-

@@ -16,8 +16,8 @@ class TrialBannerModelTest {
         val model = buildTrialBannerModel(
             isPremium = true,
             scansUsed = 120,
-            scansRemaining = 180,
-            scansLimit = 300,
+            scansRemaining = 1080,
+            scansLimit = 1200,
             strings = strings
         )
 
@@ -32,25 +32,25 @@ class TrialBannerModelTest {
         val model = buildTrialBannerModel(
             isPremium = false,
             scansUsed = 90,
-            scansRemaining = 210,
-            scansLimit = 300,
+            scansRemaining = 1110,
+            scansLimit = 1200,
             strings = strings
         )
 
-        assertEquals(strings.trialUsage.format(90, 300), model.title)
-        assertEquals(strings.trialRemaining.format(210), model.subtitle)
+        assertEquals(strings.trialUsage.format(90, 1200), model.title)
+        assertEquals(strings.trialRemaining.format(1110), model.subtitle)
         assertTrue(model.showUpgrade)
         assertTrue(model.showProgress)
-        assertEquals(0.3f, model.progress, 0.0001f)
+        assertEquals(0.075f, model.progress, 0.0001f)
     }
 
     @Test
     fun `returns trial view again when subscription is not active`() {
         val model = buildTrialBannerModel(
             isPremium = false,
-            scansUsed = 300,
+            scansUsed = 1200,
             scansRemaining = 0,
-            scansLimit = 300,
+            scansLimit = 1200,
             strings = strings
         )
 

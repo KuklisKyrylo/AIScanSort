@@ -38,6 +38,7 @@ class PreferencesManager @Inject constructor(
         val LAST_SUCCESSFUL_SYNC_MS = longPreferencesKey("last_successful_sync_ms")
         val LAST_SUMMARY_SCANNED_COUNT = intPreferencesKey("last_summary_scanned_count")
         val LAST_SUMMARY_ELAPSED_SECONDS = intPreferencesKey("last_summary_elapsed_seconds")
+        val SCAN_SORT_OPTION = stringPreferencesKey("scan_sort_option")
     }
 
     private val deviceId: String by lazy {
@@ -100,6 +101,10 @@ class PreferencesManager @Inject constructor(
 
     val lastSummaryElapsedSecondsFlow: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[Keys.LAST_SUMMARY_ELAPSED_SECONDS] ?: 0
+    }
+
+    val scanSortOptionFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[Keys.SCAN_SORT_OPTION] ?: "SYNC_DATE"
     }
 
     suspend fun setLanguage(language: AppLanguage) {
@@ -179,6 +184,12 @@ class PreferencesManager @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences[Keys.LAST_SUMMARY_SCANNED_COUNT] = scannedCount.coerceAtLeast(0)
             preferences[Keys.LAST_SUMMARY_ELAPSED_SECONDS] = elapsedSeconds.coerceAtLeast(0)
+        }
+    }
+
+    suspend fun setScanSortOption(optionName: String) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SCAN_SORT_OPTION] = optionName
         }
     }
 

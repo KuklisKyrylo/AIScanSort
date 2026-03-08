@@ -11,6 +11,7 @@ fun ScannedImage.toEntity(): ScanEntity = ScanEntity(
     extractedText = extractedText,
     tagsSerialized = tags.joinToString(TAG_DELIMITER),
     scannedAtEpochMillis = scannedAtEpochMillis,
+    photoCreatedAtEpochMillis = photoCreatedAtEpochMillis,
     status = status.name
 )
 
@@ -20,6 +21,6 @@ fun ScanEntity.toDomain(): ScannedImage = ScannedImage(
     extractedText = extractedText,
     tags = if (tagsSerialized.isBlank()) emptyList() else tagsSerialized.split(TAG_DELIMITER),
     scannedAtEpochMillis = scannedAtEpochMillis,
+    photoCreatedAtEpochMillis = photoCreatedAtEpochMillis,
     status = runCatching { ScanStatus.valueOf(status) }.getOrDefault(ScanStatus.FAILED)
 )
-

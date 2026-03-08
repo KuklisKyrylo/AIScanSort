@@ -12,6 +12,6 @@ data class ScannedImage(
     val extractedText: String,
     val tags: List<String>,
     val scannedAtEpochMillis: Long,
+    val photoCreatedAtEpochMillis: Long? = null,
     val status: ScanStatus = ScanStatus.PENDING
 )
-

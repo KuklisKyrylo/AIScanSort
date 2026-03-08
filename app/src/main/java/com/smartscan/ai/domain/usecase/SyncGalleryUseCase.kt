@@ -113,11 +113,14 @@ class SyncGalleryUseCase @Inject constructor(
                 bitmap.recycle()
             }
 
+            val photoCreatedAtEpochMillis = mediaStoreImageSource.loadPhotoCreatedAtEpochMillis(uri)
+
             val scannedImage = ScannedImage(
                 uri = uri,
                 extractedText = analysis?.text.orEmpty(),
                 tags = analysis?.tags.orEmpty(),
                 scannedAtEpochMillis = System.currentTimeMillis(),
+                photoCreatedAtEpochMillis = photoCreatedAtEpochMillis,
                 status = if (analysis == null) ScanStatus.FAILED else ScanStatus.PROCESSED
             )
 

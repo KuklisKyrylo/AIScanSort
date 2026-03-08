@@ -12,6 +12,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +41,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -112,7 +116,8 @@ fun MainScreenRoute(
             onNavigateToSettings = onNavigateToSettings,
             onNavigateToPaywall = onNavigateToPaywall,
             onImageClick = onImageClick,
-            onToggleEmptyScansFilter = viewModel::toggleEmptyScansFilter
+            onToggleEmptyScansFilter = viewModel::toggleEmptyScansFilter,
+            onSortOptionSelected = viewModel::onSortOptionSelected
         )
     }
 }
@@ -133,7 +138,8 @@ fun MainScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToPaywall: () -> Unit,
     onImageClick: (Long) -> Unit,
-    onToggleEmptyScansFilter: () -> Unit
+    onToggleEmptyScansFilter: () -> Unit,
+    onSortOptionSelected: (ScanSortOption) -> Unit
 ) {
     var showClearAllDialog by remember { mutableStateOf(false) }
     var showStartOverDialog by remember { mutableStateOf(false) }
@@ -240,7 +246,8 @@ fun MainScreen(
                     sessionDocumentCount = state.sessionDocumentCount,
                     syncStartTimeMs = state.syncStartTimeMs,
                     sessionElapsedSeconds = state.sessionElapsedSeconds,
-                    lastSuccessfulSyncTimeMs = state.lastSuccessfulSyncTimeMs
+                    lastSuccessfulSyncTimeMs = state.lastSuccessfulSyncTimeMs,
+                    onSortOptionSelected = onSortOptionSelected
                 )
 
                 // Always show subscription status: Trial for free users, Pro for active subscribers.
@@ -285,6 +292,7 @@ fun MainScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SearchTopBar(
     query: String,
@@ -306,8 +314,11 @@ private fun SearchTopBar(
     sessionDocumentCount: Int = 0,
     syncStartTimeMs: Long = 0L,
     sessionElapsedSeconds: Int = 0,
-    lastSuccessfulSyncTimeMs: Long = 0L
+    lastSuccessfulSyncTimeMs: Long = 0L,
+    onSortOptionSelected: (ScanSortOption) -> Unit
 ) {
+    var showSortMenu by remember { mutableStateOf(false) }
+
     Column {
         Row(
             modifier = Modifier
@@ -493,13 +504,47 @@ private fun SearchTopBar(
                 }
             }
 
-            Row(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                FilledTonalButton(
+                    onClick = { showSortMenu = true },
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text(
+                        text = strings.sortMenu,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                DropdownMenu(
+                    expanded = showSortMenu,
+                    onDismissRequest = { showSortMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(strings.sortBySyncDate) },
+                        onClick = {
+                            onSortOptionSelected(ScanSortOption.SYNC_DATE)
+                            showSortMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(strings.sortByPhotoDate) },
+                        onClick = {
+                            onSortOptionSelected(ScanSortOption.PHOTO_CREATED_DATE)
+                            showSortMenu = false
+                        }
+                    )
+                }
                 FilledTonalButton(
                     onClick = onToggleEmptyScansFilter,
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
@@ -519,7 +564,6 @@ private fun SearchTopBar(
                     onClick = onClearAllScansClick,
                     enabled = canClearAllScans && !isSyncing,
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.padding(start = 8.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer

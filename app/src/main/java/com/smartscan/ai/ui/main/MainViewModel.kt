@@ -43,11 +43,12 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     companion object {
-        private const val FREE_TRIAL_SCAN_LIMIT = 300
+        private const val FREE_TRIAL_SCAN_LIMIT = 1200
     }
 
     private val searchQuery = MutableStateFlow("")
     private val showEmptyScansFlow = MutableStateFlow(true) // Show all scans by default
+    private val sortOptionFlow = MutableStateFlow(ScanSortOption.SYNC_DATE)
     private var syncJob: Job? = null
 
     // Initialize with current language from preferences
@@ -110,6 +111,17 @@ class MainViewModel @Inject constructor(
                     }
                 }
         }
+        // Restore selected sort option across app restarts.
+        viewModelScope.launch {
+            preferencesManager.scanSortOptionFlow
+                .distinctUntilChanged()
+                .collect { savedOptionName ->
+                    val option = runCatching { ScanSortOption.valueOf(savedOptionName) }
+                        .getOrDefault(ScanSortOption.SYNC_DATE)
+                    sortOptionFlow.value = option
+                    _uiState.update { it.copy(sortOption = option) }
+                }
+        }
         checkFirstTimeUser()
         observeImages()
         observePaywallState()
@@ -128,6 +140,14 @@ class MainViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         searchQuery.value = query
+    }
+
+    fun onSortOptionSelected(option: ScanSortOption) {
+        sortOptionFlow.value = option
+        _uiState.update { it.copy(sortOption = option) }
+        viewModelScope.launch {
+            preferencesManager.setScanSortOption(option.name)
+        }
     }
 
     fun onMediaPermissionChanged(granted: Boolean) {
@@ -264,9 +284,14 @@ class MainViewModel @Inject constructor(
             combine(
                 searchQuery,
                 showEmptyScansFlow,
+                sortOptionFlow,
                 scanRepository.observeScannedImages("")
-            ) { query, showEmpty, allImages ->
-                android.util.Log.d("MainViewModel", "observeImages triggered: query='$query', showEmpty=$showEmpty, allImages.size=${allImages.size}")
+            ) { query, showEmpty, sortOption, allImages ->
+                android.util.Log.d(
+                    "MainViewModel",
+                    "observeImages triggered: query='$query', showEmpty=$showEmpty, sort=$sortOption, allImages.size=${allImages.size}"
+                )
+
                 val searchFiltered = if (query.isBlank()) {
                     allImages
                 } else {
@@ -275,19 +300,30 @@ class MainViewModel @Inject constructor(
                             it.tags.any { tag -> tag.contains(query, ignoreCase = true) }
                     }
                 }
-                val finalFiltered = if (showEmpty) {
-                    searchFiltered
-                } else {
-                    searchFiltered.filter { it.extractedText.isNotBlank() }
+
+                val sorted = when (sortOption) {
+                    ScanSortOption.SYNC_DATE -> {
+                        searchFiltered.sortedByDescending { it.scannedAtEpochMillis }
+                    }
+                    ScanSortOption.PHOTO_CREATED_DATE -> {
+                        searchFiltered.sortedByDescending { it.photoCreatedAtEpochMillis ?: it.scannedAtEpochMillis }
+                    }
                 }
-                android.util.Log.d("MainViewModel", "observeImages result: finalFiltered.size=${finalFiltered.size}")
-                Triple(query, finalFiltered, showEmpty)
-            }.collect { (query, filteredImages, showEmpty) ->
+
+                val finalFiltered = if (showEmpty) {
+                    sorted
+                } else {
+                    sorted.filter { it.extractedText.isNotBlank() }
+                }
+
+                Quadruple(query, finalFiltered, showEmpty, sortOption)
+            }.collect { (query, filteredImages, showEmpty, sortOption) ->
                 _uiState.update {
                     it.copy(
                         searchQuery = query,
                         images = filteredImages,
-                        showEmptyScans = showEmpty
+                        showEmptyScans = showEmpty,
+                        sortOption = sortOption
                     )
                 }
                 android.util.Log.d("MainViewModel", "UI state updated with ${filteredImages.size} images")
@@ -458,8 +494,8 @@ data class MainUiState(
     val images: List<ScannedImage> = emptyList(),
     val scannedCount: Int = 0,
     val trialScansUsed: Int = 0,
-    val trialScansRemaining: Int = 300,
-    val trialScansLimit: Int = 300,
+    val trialScansRemaining: Int = 1200,
+    val trialScansLimit: Int = 1200,
     val isPremium: Boolean = false,
     val showPaywall: Boolean = false,
     val hasMediaPermission: Boolean = false,
@@ -469,6 +505,7 @@ data class MainUiState(
     val currentLanguage: AppLanguage = AppLanguage.ENGLISH,
     val strings: StringResources = getStrings(AppLanguage.ENGLISH),
     val showEmptyScans: Boolean = true,
+    val sortOption: ScanSortOption = ScanSortOption.SYNC_DATE,
     val isSyncAllowed: Boolean = true,
     val screenshotsOnly: Boolean = true,
     val syncPhase: SyncPhase = SyncPhase.IDLE,
@@ -481,6 +518,18 @@ data class MainUiState(
     val sessionElapsedSeconds: Int = 0,
     val lastSuccessfulSyncTimeMs: Long = 0L,
     val lastSyncResultForStatus: SyncGalleryResult? = null
+)
+
+enum class ScanSortOption {
+    SYNC_DATE,
+    PHOTO_CREATED_DATE
+}
+
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
 )
 
 // Small tuple helper to keep combine readable.

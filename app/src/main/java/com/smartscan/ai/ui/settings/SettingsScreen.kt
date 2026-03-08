@@ -113,6 +113,15 @@ fun SettingsScreen(
                 )
                 HorizontalDivider()
             }
+
+            if (state.currentLanguage == AppLanguage.RUSSIAN) {
+                Text(
+                    text = state.strings.russianScanSpeedNotice,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+            }
         }
     }
 }

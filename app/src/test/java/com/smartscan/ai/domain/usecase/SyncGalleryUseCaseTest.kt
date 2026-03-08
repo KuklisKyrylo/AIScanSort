@@ -61,7 +61,7 @@ class SyncGalleryUseCaseTest {
         coEvery { scanQuotaRepository.refreshFromServer() } returns Unit
         every { preferencesManager.syncScreenshotsOnlyFlow } returns flowOf(true)
         coEvery { mediaStoreImageSource.loadLatestImageUris(any(), any()) } returns listOf("content://test/1")
-        coEvery { scanQuotaRepository.getUsedScans() } returns 300
+        coEvery { scanQuotaRepository.getUsedScans() } returns 1200
         every { billingRepository.currentIsPremium() } returns false
 
         // when
@@ -89,6 +89,7 @@ class SyncGalleryUseCaseTest {
         every { billingRepository.currentIsPremium() } returns false
         coEvery { scanRepository.hasScannedUri("content://test/1") } returns false
         coEvery { mediaStoreImageSource.loadBitmap("content://test/1") } returns bitmap
+        coEvery { mediaStoreImageSource.loadPhotoCreatedAtEpochMillis("content://test/1") } returns null
         coEvery { analyzer.analyze(bitmap) } returns ScanAnalysisResult(text = "hello", tags = listOf("tag"))
         coEvery { scanRepository.upsertScannedImage(any()) } returns 1L
         coEvery { scanQuotaRepository.incrementAndGet() } returns 11

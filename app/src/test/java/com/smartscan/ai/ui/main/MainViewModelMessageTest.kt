@@ -33,7 +33,10 @@ class MainViewModelMessageTest {
             screenshotsFolderEmpty = false
         )
 
-        assertEquals(strings.freeLimitReached.format(2, 1), buildSyncStatusMessage(strings, result))
+        assertEquals(
+            strings.freeLimitReached.format(strings.syncedLabel, 2, strings.skippedLabel.lowercase(), 1),
+            buildSyncStatusMessage(strings, result)
+        )
     }
 
     @Test

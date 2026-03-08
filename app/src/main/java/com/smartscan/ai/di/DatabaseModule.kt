@@ -24,11 +24,13 @@ object DatabaseModule {
             context,
             SmartScanDatabase::class.java,
             SmartScanDatabase.DB_NAME
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        )
+            .addMigrations(SmartScanDatabase.MIGRATION_1_2)
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
     }
 
     @Provides
     @Singleton
     fun provideScanDao(database: SmartScanDatabase): ScanDao = database.scanDao()
 }
-
