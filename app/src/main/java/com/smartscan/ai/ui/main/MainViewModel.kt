@@ -43,7 +43,7 @@ class MainViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     companion object {
-        private const val FREE_TRIAL_SCAN_LIMIT = 1200
+        private const val FREE_TRIAL_SCAN_LIMIT = 15_000
     }
 
     private val searchQuery = MutableStateFlow("")
@@ -534,7 +534,7 @@ internal fun buildClearAllStatusMessage(strings: StringResources): String {
 internal fun resolvePaywallState(
     subscriptionType: SubscriptionType,
     trialScans: Int,
-    freeTrialScanLimit: Int = 1200
+    freeTrialScanLimit: Int = 15_000
 ): PaywallState {
     val showPaywall = subscriptionType == SubscriptionType.FREE && trialScans >= freeTrialScanLimit
     return PaywallState(
@@ -553,8 +553,8 @@ data class MainUiState(
     val images: List<ScannedImage> = emptyList(),
     val scannedCount: Int = 0,
     val trialScansUsed: Int = 0,
-    val trialScansRemaining: Int = 1200,
-    val trialScansLimit: Int = 1200,
+    val trialScansRemaining: Int = 15_000,
+    val trialScansLimit: Int = 15_000,
     val isPremium: Boolean = false,
     val showPaywall: Boolean = false,
     val hasMediaPermission: Boolean = false,

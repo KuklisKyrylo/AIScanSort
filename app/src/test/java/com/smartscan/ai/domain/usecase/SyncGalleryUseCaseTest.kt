@@ -61,7 +61,7 @@ class SyncGalleryUseCaseTest {
         coEvery { scanQuotaRepository.refreshFromServer() } returns Unit
         every { preferencesManager.syncScreenshotsOnlyFlow } returns flowOf(true)
         coEvery { mediaStoreImageSource.loadLatestImageUris(any(), any()) } returns listOf("content://test/1")
-        coEvery { scanQuotaRepository.getUsedScans() } returns 1200
+        coEvery { scanQuotaRepository.getUsedScans() } returns 15_000
         every { billingRepository.currentIsPremium() } returns false
 
         // when

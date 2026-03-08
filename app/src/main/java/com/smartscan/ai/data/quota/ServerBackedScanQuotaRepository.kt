@@ -96,7 +96,7 @@ class ServerBackedScanQuotaRepository @Inject constructor(
         val json = JSONObject(response)
         QuotaResponse(
             used = json.optInt("used", 0),
-            limit = json.optInt("limit", 1200),
+            limit = json.optInt("limit", 15_000),
             allowed = json.optBoolean("allowed", true)
         )
     }

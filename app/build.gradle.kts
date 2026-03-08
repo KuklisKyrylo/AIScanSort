@@ -18,6 +18,10 @@ android {
         versionName = "1.0.0"
 
         buildConfigField("String", "SCAN_QUOTA_BASE_URL", "\"\"")
+        // Keep empty for release setup; debug falls back to Google test ad unit id.
+        buildConfigField("String", "ADMOB_BANNER_AD_UNIT_ID", "\"\"")
+        // Replace with your production AdMob app id before store release.
+        manifestPlaceholders["ADMOB_APP_ID"] = "ca-app-pub-3940256099942544~3347511713"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -106,6 +110,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     implementation("com.android.billingclient:billing-ktx:6.2.1")
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
     implementation("io.coil-kt:coil-compose:2.7.0")

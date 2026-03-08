@@ -12,7 +12,7 @@ class MainViewModelBillingStateTest {
         val state = resolvePaywallState(
             subscriptionType = SubscriptionType.MONTHLY,
             trialScans = 5000,
-            freeTrialScanLimit = 1200
+            freeTrialScanLimit = 15_000
         )
 
         assertFalse(state.showPaywall)
@@ -24,7 +24,7 @@ class MainViewModelBillingStateTest {
         val state = resolvePaywallState(
             subscriptionType = SubscriptionType.LIFETIME,
             trialScans = 5000,
-            freeTrialScanLimit = 1200
+            freeTrialScanLimit = 15_000
         )
 
         assertFalse(state.showPaywall)
@@ -35,12 +35,11 @@ class MainViewModelBillingStateTest {
     fun `free user at limit sees paywall and sync blocked`() {
         val state = resolvePaywallState(
             subscriptionType = SubscriptionType.FREE,
-            trialScans = 1200,
-            freeTrialScanLimit = 1200
+            trialScans = 15_000,
+            freeTrialScanLimit = 15_000
         )
 
         assertTrue(state.showPaywall)
         assertFalse(state.isSyncAllowed)
     }
 }
-

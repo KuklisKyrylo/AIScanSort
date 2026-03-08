@@ -65,6 +65,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.smartscan.ai.domain.model.ScannedImage
+import com.smartscan.ai.ui.ads.LightBannerAd
 import com.smartscan.ai.ui.onboarding.OnboardingScreen
 import kotlinx.coroutines.delay
 
@@ -356,13 +357,21 @@ fun MainScreen(
                     )
                 }
 
-                if (state.syncStatusMessage.isNotBlank()) {
-                    Text(
-                        text = state.syncStatusMessage,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.bodySmall
+                if (!state.isPremium) {
+                    LightBannerAd(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
+
+                 if (state.syncStatusMessage.isNotBlank()) {
+                     Text(
+                         text = state.syncStatusMessage,
+                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                         style = MaterialTheme.typography.bodySmall
+                     )
+                 }
 
                 GalleryGrid(
                     images = state.images,
